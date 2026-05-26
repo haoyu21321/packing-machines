@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>打包机设备管理</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; color: #222; font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* 顶栏 */
+  .topbar { background: #1a3a6b; color: #fff; padding: 0 24px; height: 52px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+  .topbar h1 { font-size: 16px; font-weight: 600; letter-spacing: .5px; }
+  .topbar-right { display: flex; gap: 8px; align-items: center; }
+
+  /* 按钮 */
+  .btn { padding: 6px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; transition: opacity .15s; }
+  .btn:hover { opacity: .85; }
+  .btn-primary { background: #3b82f6; color: #fff; }
+  .btn-success { background: #22c55e; color: #fff; }
+  .btn-warning { background: #f59e0b; color: #fff; }
+  .btn-danger  { background: #ef4444; color: #fff; }
+  .btn-ghost   { background: rgba(255,255,255,.15); color: #fff; }
+  .btn-sm { padding: 3px 8px; font-size: 11px; border-radius: 4px; }
+
+  /* 搜索栏 */
+  .toolbar { background: #fff; padding: 12px 24px; display: flex; gap: 12px; align-items: center; border-bottom: 1px solid #e5e7eb; flex-wrap: wrap; }
+  .search-wrap { position: relative; flex: 1; min-width: 200px; max-width: 400px; }
+  .search-wrap input { width: 100%; padding: 7px 12px 7px 34px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; outline: none; }
+  .search-wrap input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,.2); }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 14px; }
+  .filter-select { padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; outline: none; background: #fff; }
+  .count-badge { background: #eff6ff; color: #1d4ed8; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+
+  /* 表格区 */
+  .table-wrap { flex: 1; overflow: auto; padding: 16px 24px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); min-width: 1100px; }
+  thead tr { background: #1a3a6b; color: #fff; }
+  thead th { padding: 10px 10px; text-align: left; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid #f3f4f6; transition: background .1s; }
+  tbody tr:hover { background: #eff6ff; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 8px 10px; vertical-align: middle; font-size: 12px; }
+  .td-actions { white-space: nowrap; display: flex; gap: 4px; }
+
+  /* 状态徽章 */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+  .badge-ok   { background: #dcfce7; color: #166534; }
+  .badge-warn { background: #fef9c3; color: #854d0e; }
+  .badge-err  { background: #fee2e2; color: #991b1b; }
+  .badge-off  { background: #f3f4f6; color: #6b7280; }
+
+  /* 空状态 */
+  .empty { text-align: center; padding: 60px; color: #9ca3af; }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+  /* 弹窗 */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: #fff; border-radius: 10px; width: 680px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+  .modal-header { padding: 16px 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+  .modal-header h2 { font-size: 15px; font-weight: 600; }
+  .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #6b7280; line-height: 1; }
+  .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+  .modal-footer { padding: 14px 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 8px; }
+
+  /* 表单 */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label { font-size: 12px; font-weight: 500; color: #374151; }
+  .form-group input, .form-group select, .form-group textarea {
+    padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; outline: none; font-family: inherit;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,.2);
+  }
+  .form-group textarea { resize: vertical; min-height: 60px; }
+
+  /* 导入弹窗 */
+  .import-area { border: 2px dashed #d1d5db; border-radius: 8px; padding: 40px; text-align: center; color: #6b7280; cursor: pointer; transition: border-color .2s; }
+  .import-area:hover { border-color: #3b82f6; color: #3b82f6; }
+  .import-area input { display: none; }
+
+  /* 确认弹窗 */
+  .confirm-modal { background: #fff; border-radius: 10px; width: 360px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+  .confirm-modal h3 { font-size: 15px; margin-bottom: 10px; }
+  .confirm-modal p { color: #6b7280; font-size: 13px; margin-bottom: 20px; }
+  .confirm-btns { display: flex; justify-content: flex-end; gap: 8px; }
+
+  /* Toast */
+  .toast-wrap { position: fixed; top: 64px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast { padding: 10px 16px; border-radius: 8px; color: #fff; font-size: 13px; box-shadow: 0 4px 12px rgba(0,0,0,.2); animation: slideIn .2s ease; }
+  .toast-success { background: #22c55e; }
+  .toast-error   { background: #ef4444; }
+  @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  .mono { font-family: monospace; font-size: 11px; }
+  .dept-text { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<!-- 顶栏 -->
+<div class="topbar">
+  <h1>🖥 打包机设备管理</h1>
+  <div class="topbar-right">
+    <button class="btn btn-ghost" onclick="openImport()">📥 导入 Excel</button>
+    <button class="btn btn-ghost" onclick="exportExcel()">📤 导出 Excel</button>
+    <button class="btn btn-primary" onclick="openAdd()">＋ 新增设备</button>
+  </div>
+</div>
+
+<!-- 搜索栏 -->
+<div class="toolbar">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="搜索负责人、IP、MAC地址、资产编号、设备编号…" oninput="renderTable()">
+  </div>
+  <select class="filter-select" id="filterType" onchange="renderTable()">
+    <option value="">全部类型</option>
+    <option value="MAC-mini">MAC-mini</option>
+    <option value="MAC PRO">MAC PRO</option>
+    <option value="服务器">服务器</option>
+    <option value="windows台式机">Windows台式机</option>
+  </select>
+  <select class="filter-select" id="filterStatus" onchange="renderTable()">
+    <option value="">全部状态</option>
+    <option value="正常运行">正常运行</option>
+    <option value="故障中">故障中</option>
+    <option value="维修中">维修中</option>
+    <option value="闲置">闲置</option>
+    <option value="已下线">已下线</option>
+  </select>
+  <span class="count-badge" id="countBadge">共 0 台</span>
+</div>
+
+<!-- 表格 -->
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>机房编号</th>
+        <th>设备类型</th>
+        <th>负责人</th>
+        <th>资产挂名</th>
+        <th>IP 地址</th>
+        <th>MAC 地址</th>
+        <th>资产编号</th>
+        <th>序列号</th>
+        <th>所属部门</th>
+        <th>业务类型</th>
+        <th>存放位置</th>
+        <th>操作系统</th>
+        <th>空闲时间</th>
+        <th>状态</th>
+        <th>注意事项</th>
+        <th>备注</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+  <div class="empty" id="emptyState" style="display:none">
+    <div class="empty-icon">📭</div>
+    <div>没有找到匹配的设备</div>
+  </div>
+</div>
+
+<!-- 新增/编辑弹窗 -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">新增设备</h2>
+      <button class="modal-close" onclick="closeModal('editModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>机房内编号</label>
+          <input id="f_roomNo" placeholder="如：MAC-MINI 01">
+        </div>
+        <div class="form-group">
+          <label>设备类型</label>
+          <select id="f_type">
+            <option>MAC-mini</option>
+            <option>MAC PRO</option>
+            <option>服务器</option>
+            <option>windows台式机</option>
+            <option>NAS</option>
+            <option>其他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>负责人</label>
+          <input id="f_owner" placeholder="如：zhaoguanxun">
+        </div>
+        <div class="form-group">
+          <label>资产挂名人</label>
+          <input id="f_assetOwner" placeholder="如：zhaoguanxun">
+        </div>
+        <div class="form-group">
+          <label>IP 地址</label>
+          <input id="f_ip" placeholder="如：10.1.6.44">
+        </div>
+        <div class="form-group">
+          <label>MAC 地址</label>
+          <input id="f_mac" placeholder="如：14:98:77:3a:53:d5">
+        </div>
+        <div class="form-group">
+          <label>设备资产编号</label>
+          <input id="f_assetNo" placeholder="如：F101150224">
+        </div>
+        <div class="form-group">
+          <label>序列号 / 计算机名</label>
+          <input id="f_serial" placeholder="如：C07F92P0Q6P0">
+        </div>
+        <div class="form-group full">
+          <label>所属部门</label>
+          <input id="f_dept" placeholder="如：猿力未来/基础研发部/工程中心">
+        </div>
+        <div class="form-group">
+          <label>业务类型</label>
+          <input id="f_biz" placeholder="如：CI机器">
+        </div>
+        <div class="form-group">
+          <label>存放位置</label>
+          <input id="f_location" placeholder="如：E5机房1柜1层">
+        </div>
+        <div class="form-group">
+          <label>操作系统版本</label>
+          <input id="f_os" placeholder="如：macOS 14.5">
+        </div>
+        <div class="form-group">
+          <label>设备空闲时间</label>
+          <input id="f_idle" placeholder="如：0:00-07:00">
+        </div>
+        <div class="form-group">
+          <label>IP 是否绑定</label>
+          <select id="f_ipBound">
+            <option value="是">是</option>
+            <option value="否">否</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>当前状态</label>
+          <select id="f_status">
+            <option>正常运行</option>
+            <option>故障中</option>
+            <option>维修中</option>
+            <option>闲置</option>
+            <option>已下线</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>功能描述</label>
+          <textarea id="f_func" placeholder="如：CI和CD 以及SDK打包任务"></textarea>
+        </div>
+        <div class="form-group full">
+          <label>注意事项</label>
+          <textarea id="f_notice" placeholder="如：ip地址不能变动"></textarea>
+        </div>
+        <div class="form-group full">
+          <label>备注</label>
+          <textarea id="f_remark"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="background:#f3f4f6;color:#374151" onclick="closeModal('editModal')">取消</button>
+      <button class="btn btn-primary" onclick="saveDevice()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 导入弹窗 -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal" style="width:480px">
+    <div class="modal-header">
+      <h2>导入 Excel</h2>
+      <button class="modal-close" onclick="closeModal('importModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <label class="import-area" id="importArea">
+        <input type="file" id="importFile" accept=".xlsx,.xls" onchange="handleImportFile(this)">
+        <div style="font-size:36px;margin-bottom:10px">📂</div>
+        <div style="font-weight:500;margin-bottom:6px">点击选择 Excel 文件</div>
+        <div style="font-size:12px">支持 .xlsx / .xls 格式</div>
+      </label>
+      <div id="importPreview" style="margin-top:14px;font-size:12px;color:#374151"></div>
+      <div style="margin-top:16px;padding:12px;background:#fffbeb;border-radius:6px;font-size:12px;color:#92400e">
+        <b>导入说明：</b>读取第一个 Sheet，列顺序与本系统导出格式一致。
+        导入时可选择<b>覆盖全部</b>或<b>追加</b>现有数据。
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="background:#f3f4f6;color:#374151" onclick="closeModal('importModal')">取消</button>
+      <button class="btn btn-warning" onclick="doImport(false)" id="btnImportAppend" disabled>追加导入</button>
+      <button class="btn btn-primary" onclick="doImport(true)" id="btnImportOverwrite" disabled>覆盖导入</button>
+    </div>
+  </div>
+</div>
+
+<!-- 删除确认弹窗 -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="confirm-modal">
+    <h3>确认删除</h3>
+    <p id="confirmMsg">确定要删除这台设备吗？此操作不可撤销。</p>
+    <div class="confirm-btns">
+      <button class="btn btn-ghost" style="background:#f3f4f6;color:#374151" onclick="closeModal('confirmModal')">取消</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ========== 数据层 ==========
+const STORE_KEY = 'packing_machines_v1';
+let devices = [];
+let editingId = null;
+let deletingId = null;
+let importData = null;
+
+function loadData() {
+  try { devices = JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch(e) { devices = []; }
+}
+function saveData() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(devices));
+}
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+}
+
+// ========== 渲染 ==========
+const FIELDS = ['roomNo','type','owner','assetOwner','ip','mac','assetNo','serial','dept','biz','location','os','idle','ipBound','status','func','notice','remark'];
+const HEADERS = ['机房编号','设备类型','负责人','资产挂名','IP地址','MAC地址','资产编号','序列号/计算机名','所属部门','业务类型','存放位置','操作系统版本','空闲时间','IP是否绑定','状态','功能描述','注意事项','备注'];
+
+function statusBadge(s) {
+  const map = { '正常运行':'badge-ok','故障中':'badge-err','维修中':'badge-warn','闲置':'badge-off','已下线':'badge-off' };
+  return `<span class="badge ${map[s]||'badge-off'}">${s||'未知'}</span>`;
+}
+
+function renderTable() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const fType = document.getElementById('filterType').value;
+  const fStatus = document.getElementById('filterStatus').value;
+
+  let list = devices.filter(d => {
+    if (fType && d.type !== fType) return false;
+    if (fStatus && d.status !== fStatus) return false;
+    if (!q) return true;
+    return [d.owner,d.assetOwner,d.ip,d.mac,d.assetNo,d.serial,d.roomNo,d.dept,d.biz,d.location].some(v => v && v.toLowerCase().includes(q));
+  });
+
+  document.getElementById('countBadge').textContent = `共 ${list.length} 台`;
+
+  const tbody = document.getElementById('tableBody');
+  if (list.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('emptyState').style.display = 'block';
+    return;
+  }
+  document.getElementById('emptyState').style.display = 'none';
+
+  tbody.innerHTML = list.map(d => `
+    <tr>
+      <td><b>${d.roomNo||''}</b></td>
+      <td>${d.type||''}</td>
+      <td><b style="color:#1a3a6b">${d.owner||''}</b></td>
+      <td>${d.assetOwner||''}</td>
+      <td class="mono">${d.ip||''}</td>
+      <td class="mono" style="font-size:10px">${d.mac||''}</td>
+      <td class="mono" style="font-size:10px">${d.assetNo||''}</td>
+      <td class="mono" style="font-size:10px">${d.serial||''}</td>
+      <td><div class="dept-text" title="${d.dept||''}">${d.dept||''}</div></td>
+      <td>${d.biz||''}</td>
+      <td>${d.location||''}</td>
+      <td>${d.os||''}</td>
+      <td style="font-size:11px">${d.idle||''}</td>
+      <td>${statusBadge(d.status)}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.notice||''}">${d.notice||''}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.remark||''}">${d.remark||''}</td>
+      <td>
+        <div class="td-actions">
+          <button class="btn btn-warning btn-sm" onclick="openEdit('${d.id}')">编辑</button>
+          <button class="btn btn-danger btn-sm" onclick="openDelete('${d.id}')">删除</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ========== 新增/编辑 ==========
+function openAdd() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = '新增设备';
+  clearForm();
+  openModal('editModal');
+}
+
+function openEdit(id) {
+  const d = devices.find(x => x.id === id);
+  if (!d) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = '编辑设备';
+  document.getElementById('f_roomNo').value = d.roomNo||'';
+  document.getElementById('f_type').value = d.type||'MAC-mini';
+  document.getElementById('f_owner').value = d.owner||'';
+  document.getElementById('f_assetOwner').value = d.assetOwner||'';
+  document.getElementById('f_ip').value = d.ip||'';
+  document.getElementById('f_mac').value = d.mac||'';
+  document.getElementById('f_assetNo').value = d.assetNo||'';
+  document.getElementById('f_serial').value = d.serial||'';
+  document.getElementById('f_dept').value = d.dept||'';
+  document.getElementById('f_biz').value = d.biz||'';
+  document.getElementById('f_location').value = d.location||'';
+  document.getElementById('f_os').value = d.os||'';
+  document.getElementById('f_idle').value = d.idle||'';
+  document.getElementById('f_ipBound').value = d.ipBound||'是';
+  document.getElementById('f_status').value = d.status||'正常运行';
+  document.getElementById('f_func').value = d.func||'';
+  document.getElementById('f_notice').value = d.notice||'';
+  document.getElementById('f_remark').value = d.remark||'';
+  openModal('editModal');
+}
+
+function clearForm() {
+  ['f_roomNo','f_owner','f_assetOwner','f_ip','f_mac','f_assetNo','f_serial','f_dept','f_biz','f_location','f_os','f_idle','f_func','f_notice','f_remark'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f_type').value = 'MAC-mini';
+  document.getElementById('f_ipBound').value = '是';
+  document.getElementById('f_status').value = '正常运行';
+}
+
+function saveDevice() {
+  const d = {
+    id: editingId || genId(),
+    roomNo: v('f_roomNo'), type: v('f_type'), owner: v('f_owner'), assetOwner: v('f_assetOwner'),
+    ip: v('f_ip'), mac: v('f_mac'), assetNo: v('f_assetNo'), serial: v('f_serial'),
+    dept: v('f_dept'), biz: v('f_biz'), location: v('f_location'), os: v('f_os'),
+    idle: v('f_idle'), ipBound: v('f_ipBound'), status: v('f_status'),
+    func: v('f_func'), notice: v('f_notice'), remark: v('f_remark'),
+  };
+  if (!d.owner && !d.ip && !d.roomNo) { toast('请至少填写负责人、IP 或机房编号', 'error'); return; }
+  if (editingId) {
+    const idx = devices.findIndex(x => x.id === editingId);
+    if (idx >= 0) devices[idx] = d;
+  } else {
+    devices.push(d);
+  }
+  saveData();
+  closeModal('editModal');
+  renderTable();
+  toast(editingId ? '修改已保存' : '设备已添加');
+}
+
+function v(id) { return document.getElementById(id).value.trim(); }
+
+// ========== 删除 ==========
+function openDelete(id) {
+  deletingId = id;
+  const d = devices.find(x => x.id === id);
+  document.getElementById('confirmMsg').textContent = `确定要删除「${d?.roomNo||d?.ip||'该设备'}」吗？此操作不可撤销。`;
+  openModal('confirmModal');
+}
+function confirmDelete() {
+  devices = devices.filter(x => x.id !== deletingId);
+  saveData();
+  closeModal('confirmModal');
+  renderTable();
+  toast('设备已删除', 'error');
+}
+
+// ========== 导入 ==========
+function openImport() {
+  importData = null;
+  document.getElementById('importPreview').textContent = '';
+  document.getElementById('importFile').value = '';
+  document.getElementById('btnImportAppend').disabled = true;
+  document.getElementById('btnImportOverwrite').disabled = true;
+  openModal('importModal');
+}
+
+function handleImportFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      if (rows.length < 2) { toast('文件为空或格式不对', 'error'); return; }
+
+      // 尝试按表头匹配，兼容本系统导出格式和原始xlsx格式
+      const headerRow = rows[0].map(h => String(h).trim());
+      importData = [];
+
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row.some(c => c !== '')) continue;
+
+        // 本系统导出格式（按HEADERS顺序）
+        if (headerRow[0] === '机房编号' || headerRow[0] === '机房内编号') {
+          importData.push({
+            id: genId(),
+            roomNo: row[0], type: row[1], owner: row[2], assetOwner: row[3],
+            ip: row[4], mac: row[5], assetNo: row[6], serial: row[7],
+            dept: row[8], biz: row[9], location: row[10], os: row[11],
+            idle: row[12], ipBound: row[13], status: row[14]||'正常运行',
+            func: row[15], notice: row[16], remark: row[17],
+          });
+        } else {
+          // 原始格式：设备类型(0),所属部门(1),负责人(2),资产挂名(3),资产编号(4),IP(5),MAC(6),机房编号(7),...
+          importData.push({
+            id: genId(),
+            type: row[0], dept: row[1], owner: row[2], assetOwner: row[3],
+            assetNo: row[4], ip: String(row[5]).trim(), mac: String(row[6]).trim(),
+            roomNo: row[7], ipBound: row[8], idle: row[9], biz: row[10],
+            status: row[17]||'正常运行', notice: row[14], func: row[15],
+            location: row[16], remark: row[18], serial: String(row[19]||'').trim(),
+          });
+        }
+      }
+
+      document.getElementById('importPreview').innerHTML = `<span style="color:#22c55e">✓</span> 解析完成，共 <b>${importData.length}</b> 条记录`;
+      document.getElementById('btnImportAppend').disabled = false;
+      document.getElementById('btnImportOverwrite').disabled = false;
+    } catch(err) {
+      toast('文件解析失败：' + err.message, 'error');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function doImport(overwrite) {
+  if (!importData) return;
+  if (overwrite) {
+    devices = importData;
+  } else {
+    devices = devices.concat(importData);
+  }
+  saveData();
+  closeModal('importModal');
+  renderTable();
+  toast(`已${overwrite?'覆盖':'追加'}导入 ${importData.length} 条设备数据`);
+}
+
+// ========== 导出 ==========
+function exportExcel() {
+  if (devices.length === 0) { toast('暂无数据可导出', 'error'); return; }
+  const data = [HEADERS];
+  devices.forEach(d => {
+    data.push(FIELDS.map(f => d[f]||''));
+  });
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [10,10,12,12,14,18,16,16,30,16,18,14,16,10,10,24,20,20].map(w=>({wch:w}));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '打包机设备');
+  const date = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `打包机设备_${date}.xlsx`);
+  toast('导出成功');
+}
+
+// ========== 弹窗控制 ==========
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('show'); });
+});
+
+// ========== Toast ==========
+function toast(msg, type='success') {
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ========== 初始化 ==========
+loadData();
+renderTable();
+</script>
+</body>
+</html>
