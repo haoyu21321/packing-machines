@@ -105,9 +105,10 @@
 <!-- 顶栏 -->
 <div class="topbar">
   <h1>🖥 打包机设备管理</h1>
-  <div class="topbar-right">
+  <div class="topbar-right" id="editControls">
     <button class="btn btn-ghost" onclick="openImport()">📥 导入 Excel</button>
     <button class="btn btn-ghost" onclick="exportExcel()">📤 导出 Excel</button>
+    <button class="btn btn-success" onclick="publishData()" id="btnPublish">🚀 发布到线上</button>
     <button class="btn btn-primary" onclick="openAdd()">＋ 新增设备</button>
   </div>
 </div>
@@ -580,6 +581,63 @@ function toast(msg, type='success') {
   el.textContent = msg;
   wrap.appendChild(el);
   setTimeout(() => el.remove(), 3000);
+}
+
+// ========== 发布到线上 ==========
+const GITHUB_OWNER = 'haoyu21321';
+const GITHUB_REPO  = 'packing-machines';
+const GITHUB_FILE  = 'data.json';
+
+async function publishData() {
+  if (devices.length === 0) { toast('暂无数据可发布', 'error'); return; }
+
+  const token = localStorage.getItem('gh_token');
+  if (!token) {
+    const t = prompt('请输入你的 GitHub Personal Access Token（只需首次输入）：\n\n获取地址：github.com → Settings → Developer settings → Personal access tokens → Tokens (classic)\n权限勾选：repo');
+    if (!t) return;
+    localStorage.setItem('gh_token', t.trim());
+  }
+
+  const btn = document.getElementById('btnPublish');
+  btn.textContent = '发布中…';
+  btn.disabled = true;
+
+  try {
+    const ghToken = localStorage.getItem('gh_token');
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(devices, null, 2))));
+
+    // 先获取现有文件的 SHA（更新文件需要）
+    let sha = null;
+    const getRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
+      headers: { 'Authorization': `token ${ghToken}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (getRes.ok) { const j = await getRes.json(); sha = j.sha; }
+
+    // 上传 data.json
+    const putRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `token ${ghToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: `update: ${new Date().toLocaleString('zh-CN')}`, content, ...(sha ? {sha} : {}) })
+    });
+
+    if (!putRes.ok) {
+      const err = await putRes.json();
+      if (err.message && err.message.includes('Bad credentials')) {
+        localStorage.removeItem('gh_token');
+        toast('Token 无效，已清除，请重试', 'error');
+      } else {
+        toast('发布失败：' + err.message, 'error');
+      }
+      return;
+    }
+
+    toast('✅ 发布成功！线上页面约30秒后更新');
+  } catch(e) {
+    toast('发布失败：' + e.message, 'error');
+  } finally {
+    btn.textContent = '🚀 发布到线上';
+    btn.disabled = false;
+  }
 }
 
 // ========== 初始化 ==========

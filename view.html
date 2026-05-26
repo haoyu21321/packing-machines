@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>打包机设备查看</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; color: #222; font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { background: #1a3a6b; color: #fff; padding: 0 24px; height: 52px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+  .topbar h1 { font-size: 16px; font-weight: 600; }
+  .topbar-right { font-size: 12px; opacity: .8; }
+  .toolbar { background: #fff; padding: 12px 24px; display: flex; gap: 12px; align-items: center; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; flex-wrap: wrap; }
+  .search-wrap { position: relative; flex: 1; min-width: 200px; max-width: 400px; }
+  .search-wrap input { width: 100%; padding: 7px 12px 7px 34px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; outline: none; }
+  .search-wrap input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,.2); }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+  .filter-select { padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; outline: none; background: #fff; }
+  .count-badge { background: #eff6ff; color: #1d4ed8; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+  .table-wrap { flex: 1; overflow: auto; padding: 16px 24px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); min-width: 1000px; }
+  thead tr { background: #1a3a6b; color: #fff; }
+  thead th { padding: 10px; text-align: left; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid #f3f4f6; transition: background .1s; }
+  tbody tr:hover { background: #eff6ff; }
+  tbody td { padding: 8px 10px; vertical-align: middle; font-size: 12px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+  .badge-ok   { background: #dcfce7; color: #166534; }
+  .badge-warn { background: #fef9c3; color: #854d0e; }
+  .badge-err  { background: #fee2e2; color: #991b1b; }
+  .badge-off  { background: #f3f4f6; color: #6b7280; }
+  .mono { font-family: monospace; font-size: 11px; }
+  .dept-text { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .empty { text-align: center; padding: 60px; color: #9ca3af; }
+  .loading { text-align: center; padding: 80px; color: #6b7280; font-size: 14px; }
+  .readonly-tip { background: #fffbeb; border-bottom: 1px solid #fde68a; padding: 8px 24px; font-size: 12px; color: #92400e; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>🖥 打包机设备查看</h1>
+  <div class="topbar-right" id="updateTime">加载中…</div>
+</div>
+<div class="readonly-tip">👁 只读模式，如需修改请联系 IT 运维</div>
+<div class="toolbar">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="搜索负责人、IP、MAC地址、资产编号…" oninput="renderTable()">
+  </div>
+  <select class="filter-select" id="filterType" onchange="renderTable()">
+    <option value="">全部类型</option>
+    <option value="MAC-mini">MAC-mini</option>
+    <option value="MAC PRO">MAC PRO</option>
+    <option value="服务器">服务器</option>
+    <option value="windows台式机">Windows台式机</option>
+  </select>
+  <select class="filter-select" id="filterStatus" onchange="renderTable()">
+    <option value="">全部状态</option>
+    <option value="正常运行">正常运行</option>
+    <option value="故障中">故障中</option>
+    <option value="维修中">维修中</option>
+    <option value="闲置">闲置</option>
+    <option value="已下线">已下线</option>
+  </select>
+  <span class="count-badge" id="countBadge">共 0 台</span>
+</div>
+
+<div class="table-wrap">
+  <div class="loading" id="loadingState">⏳ 加载数据中…</div>
+  <table id="mainTable" style="display:none">
+    <thead>
+      <tr>
+        <th>机房编号</th>
+        <th>设备类型</th>
+        <th>负责人</th>
+        <th>资产挂名</th>
+        <th>IP 地址</th>
+        <th>MAC 地址</th>
+        <th>资产编号</th>
+        <th>序列号</th>
+        <th>所属部门</th>
+        <th>业务类型</th>
+        <th>存放位置</th>
+        <th>操作系统</th>
+        <th>空闲时间</th>
+        <th>状态</th>
+        <th>注意事项</th>
+        <th>备注</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+  <div class="empty" id="emptyState" style="display:none">没有找到匹配的设备</div>
+</div>
+
+<script>
+let devices = [];
+
+async function loadData() {
+  try {
+    const res = await fetch(`https://raw.githubusercontent.com/haoyu21321/packing-machines/main/data.json?t=${Date.now()}`);
+    if (!res.ok) throw new Error('数据文件不存在，请先从编辑端发布数据');
+    devices = await res.json();
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('mainTable').style.display = '';
+    document.getElementById('updateTime').textContent = '数据已加载 · ' + new Date().toLocaleString('zh-CN');
+    renderTable();
+  } catch(e) {
+    document.getElementById('loadingState').textContent = '⚠️ ' + e.message;
+  }
+}
+
+function statusBadge(s) {
+  const map = { '正常运行':'badge-ok','故障中':'badge-err','维修中':'badge-warn','闲置':'badge-off','已下线':'badge-off' };
+  return `<span class="badge ${map[s]||'badge-off'}">${s||'未知'}</span>`;
+}
+
+function renderTable() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const fType = document.getElementById('filterType').value;
+  const fStatus = document.getElementById('filterStatus').value;
+
+  let list = devices.filter(d => {
+    if (fType && d.type !== fType) return false;
+    if (fStatus && d.status !== fStatus) return false;
+    if (!q) return true;
+    return [d.owner,d.assetOwner,d.ip,d.mac,d.assetNo,d.serial,d.roomNo,d.dept,d.biz,d.location].some(v => v && v.toLowerCase().includes(q));
+  });
+
+  document.getElementById('countBadge').textContent = `共 ${list.length} 台`;
+  const tbody = document.getElementById('tableBody');
+
+  if (list.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('emptyState').style.display = 'block';
+    return;
+  }
+  document.getElementById('emptyState').style.display = 'none';
+
+  tbody.innerHTML = list.map(d => `
+    <tr>
+      <td><b>${d.roomNo||''}</b></td>
+      <td>${d.type||''}</td>
+      <td><b style="color:#1a3a6b">${d.owner||''}</b></td>
+      <td>${d.assetOwner||''}</td>
+      <td class="mono">${d.ip||''}</td>
+      <td class="mono" style="font-size:10px">${d.mac||''}</td>
+      <td class="mono" style="font-size:10px">${d.assetNo||''}</td>
+      <td class="mono" style="font-size:10px">${d.serial||''}</td>
+      <td><div class="dept-text" title="${d.dept||''}">${d.dept||''}</div></td>
+      <td>${d.biz||''}</td>
+      <td>${d.location||''}</td>
+      <td>${d.os||''}</td>
+      <td style="font-size:11px">${d.idle||''}</td>
+      <td>${statusBadge(d.status)}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.notice||''}">${d.notice||''}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.remark||''}">${d.remark||''}</td>
+    </tr>
+  `).join('');
+}
+
+loadData();
+</script>
+</body>
+</html>
