@@ -34,6 +34,15 @@
   .empty { text-align: center; padding: 60px; color: #9ca3af; }
   .loading { text-align: center; padding: 80px; color: #6b7280; font-size: 14px; }
   .readonly-tip { background: #fffbeb; border-bottom: 1px solid #fde68a; padding: 8px 24px; font-size: 12px; color: #92400e; flex-shrink: 0; }
+  .tabs { background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; padding: 0 24px; flex-shrink: 0; }
+  .tab { padding: 10px 18px; cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent; color: #6b7280; }
+  .tab.active { border-bottom-color: #3b82f6; color: #1d4ed8; font-weight: 500; }
+  .ping-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+  .ping-ok   { background: #22c55e; }
+  .ping-fail { background: #ef4444; }
+  .ping-wait { background: #d1d5db; }
+  .ping-ing  { background: #f59e0b; animation: blink .8s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 </style>
 </head>
 <body>
@@ -43,7 +52,11 @@
   <div class="topbar-right" id="updateTime">加载中…</div>
 </div>
 <div class="readonly-tip">👁 只读模式，如需修改请联系 IT 运维</div>
-<div class="toolbar">
+<div class="tabs">
+  <div class="tab active" id="tab-devices" onclick="switchTab('devices')">🖥 设备列表</div>
+  <div class="tab" id="tab-ping" onclick="switchTab('ping')">📡 Ping 检测</div>
+</div>
+<div class="toolbar" id="panel-toolbar">
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
     <input type="text" id="searchInput" placeholder="搜索负责人、IP、MAC地址、资产编号…" oninput="renderTable()">
@@ -66,7 +79,7 @@
   <span class="count-badge" id="countBadge">共 0 台</span>
 </div>
 
-<div class="table-wrap">
+<div class="table-wrap" id="panel-devices">
   <div class="loading" id="loadingState">⏳ 加载数据中…</div>
   <table id="mainTable" style="display:none">
     <thead>
@@ -94,8 +107,119 @@
   <div class="empty" id="emptyState" style="display:none">没有找到匹配的设备</div>
 </div>
 
+<!-- Ping 检测面板 -->
+<div class="table-wrap" id="panel-ping" style="display:none">
+  <div style="margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="pingAll()" id="btnPingAll">📡 一键检测全部</button>
+    <div style="position:relative;flex:1;min-width:200px;max-width:360px">
+      <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#9ca3af">🔍</span>
+      <input type="text" id="pingSearch" placeholder="搜索负责人、IP、机房编号…" oninput="renderPingTable()"
+        style="width:100%;padding:7px 12px 7px 34px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;outline:none">
+    </div>
+    <span id="pingStatus" style="font-size:12px;color:#6b7280"></span>
+  </div>
+  <table style="min-width:800px">
+    <thead>
+      <tr>
+        <th>在线状态</th>
+        <th>延迟</th>
+        <th>机房编号</th>
+        <th>设备类型</th>
+        <th>负责人</th>
+        <th>IP 地址</th>
+        <th>存放位置</th>
+        <th>业务类型</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="pingTableBody"></tbody>
+  </table>
+</div>
+
 <script>
 let devices = [];
+const PING_SERVER = 'http://10.1.58.240:7789';
+let pingResults = {};
+
+function switchTab(tab) {
+  ['devices','ping'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+    document.getElementById(`panel-${t}`).style.display = t === tab ? '' : 'none';
+  });
+  document.getElementById('panel-toolbar').style.display = tab === 'devices' ? '' : 'none';
+  if (tab === 'ping') renderPingTable();
+}
+
+function renderPingTable() {
+  const q = (document.getElementById('pingSearch')?.value || '').trim().toLowerCase();
+  const list = q ? devices.filter(d =>
+    [d.owner, d.ip, d.roomNo, d.type, d.location, d.biz].some(v => v && v.toLowerCase().includes(q))
+  ) : devices;
+  const tbody = document.getElementById('pingTableBody');
+  tbody.innerHTML = list.map(d => {
+    const r = pingResults[d.ip];
+    let dot, latency;
+    if (!d.ip) { dot = 'ping-wait'; latency = '无IP'; }
+    else if (!r) { dot = 'ping-wait'; latency = '未检测'; }
+    else if (r === 'checking') { dot = 'ping-ing'; latency = '检测中…'; }
+    else if (r.alive) { dot = 'ping-ok'; latency = `${r.ms}ms`; }
+    else { dot = 'ping-fail'; latency = '不通'; }
+    return `
+      <tr>
+        <td><span class="ping-dot ${dot}"></span>${dot==='ping-ok'?'在线':dot==='ping-fail'?'离线':dot==='ping-ing'?'检测中':'未知'}</td>
+        <td style="font-family:monospace;font-size:11px">${latency}</td>
+        <td><b>${d.roomNo||''}</b></td>
+        <td>${d.type||''}</td>
+        <td style="color:#1a3a6b;font-weight:500">${d.owner||''}</td>
+        <td style="font-family:monospace;font-size:11px">${d.ip||''}</td>
+        <td>${d.location||''}</td>
+        <td>${d.biz||''}</td>
+        <td><button onclick="pingSingle('${d.ip}')" ${!d.ip?'disabled':''} style="padding:3px 8px;font-size:11px;border:none;border-radius:4px;background:#3b82f6;color:#fff;cursor:pointer">Ping</button></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function pingSingle(ip) {
+  if (!ip) return;
+  pingResults[ip] = 'checking';
+  renderPingTable();
+  try {
+    const res = await fetch(`${PING_SERVER}/ping?ip=${ip}`, { signal: AbortSignal.timeout(5000) });
+    pingResults[ip] = await res.json();
+  } catch(e) {
+    pingResults[ip] = { alive: false, ms: null };
+    alert('连不上 ping 服务，请联系 IT 运维确认服务是否启动');
+  }
+  renderPingTable();
+}
+
+async function pingAll() {
+  const q = (document.getElementById('pingSearch')?.value || '').trim().toLowerCase();
+  const filtered = q ? devices.filter(d =>
+    [d.owner, d.ip, d.roomNo, d.type, d.location, d.biz].some(v => v && v.toLowerCase().includes(q))
+  ) : devices;
+  const ips = [...new Set(filtered.map(d => d.ip).filter(ip => ip && ip.trim()))];
+  if (ips.length === 0) return;
+  ips.forEach(ip => pingResults[ip] = 'checking');
+  renderPingTable();
+  const btn = document.getElementById('btnPingAll');
+  btn.disabled = true; btn.textContent = '检测中…';
+  document.getElementById('pingStatus').textContent = `正在检测 ${ips.length} 个IP…`;
+  try {
+    const res = await fetch(`${PING_SERVER}/pingall?ips=${ips.join(',')}`, { signal: AbortSignal.timeout(30000) });
+    const data = await res.json();
+    Object.assign(pingResults, data);
+    const ok = Object.values(data).filter(r => r.alive).length;
+    document.getElementById('pingStatus').textContent = `检测完成：${ok} 在线 / ${ips.length - ok} 离线`;
+  } catch(e) {
+    ips.forEach(ip => { if (pingResults[ip] === 'checking') pingResults[ip] = { alive: false, ms: null }; });
+    alert('连不上 ping 服务，请联系 IT 运维确认服务是否启动');
+    document.getElementById('pingStatus').textContent = '';
+  }
+  btn.disabled = false; btn.textContent = '📡 一键检测全部';
+  renderPingTable();
+}
 
 async function loadData() {
   try {

@@ -204,8 +204,13 @@
 
 <!-- Ping 检测面板 -->
 <div id="panel-ping" class="table-wrap" style="display:none">
-  <div style="margin-bottom:12px;display:flex;gap:10px;align-items:center">
+  <div style="margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
     <button class="btn btn-primary" onclick="pingAll()" id="btnPingAll">📡 一键检测全部</button>
+    <div style="position:relative;flex:1;min-width:200px;max-width:360px">
+      <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#9ca3af">🔍</span>
+      <input type="text" id="pingSearch" placeholder="搜索负责人、IP、机房编号…" oninput="renderPingTable()"
+        style="width:100%;padding:7px 12px 7px 34px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;outline:none">
+    </div>
     <span id="pingStatus" style="font-size:12px;color:#6b7280"></span>
     <span style="font-size:12px;color:#9ca3af;margin-left:auto">需先启动：<code style="background:#f3f4f6;padding:2px 6px;border-radius:4px">node ping-server.js</code></span>
   </div>
@@ -523,6 +528,7 @@ function saveDevice() {
   saveData();
   closeModal('editModal');
   renderTable();
+  renderPingTable();
   toast(editingId ? '修改已保存' : '设备已添加');
 }
 
@@ -542,6 +548,7 @@ function confirmDelete() {
   saveData();
   closeModal('confirmModal');
   renderTable();
+  renderPingTable();
   toast('设备已删除', 'error');
 }
 
@@ -768,8 +775,12 @@ const PING_PORT = 7789;
 let pingResults = {};
 
 function renderPingTable() {
+  const q = (document.getElementById('pingSearch')?.value || '').trim().toLowerCase();
+  const list = q ? devices.filter(d =>
+    [d.owner, d.ip, d.roomNo, d.type, d.location, d.biz].some(v => v && v.toLowerCase().includes(q))
+  ) : devices;
   const tbody = document.getElementById('pingTableBody');
-  tbody.innerHTML = devices.map(d => {
+  tbody.innerHTML = list.map(d => {
     const r = pingResults[d.ip];
     let dot, latency;
     if (!d.ip) { dot = 'ping-wait'; latency = '无IP'; }
@@ -810,7 +821,11 @@ async function pingSingle(ip, id) {
 }
 
 async function pingAll() {
-  const ips = [...new Set(devices.map(d => d.ip).filter(ip => ip && ip.trim()))];
+  const q = (document.getElementById('pingSearch')?.value || '').trim().toLowerCase();
+  const filtered = q ? devices.filter(d =>
+    [d.owner, d.ip, d.roomNo, d.type, d.location, d.biz].some(v => v && v.toLowerCase().includes(q))
+  ) : devices;
+  const ips = [...new Set(filtered.map(d => d.ip).filter(ip => ip && ip.trim()))];
   if (ips.length === 0) { toast('没有可检测的IP', 'error'); return; }
 
   ips.forEach(ip => pingResults[ip] = 'checking');

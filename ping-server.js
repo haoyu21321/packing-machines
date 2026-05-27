@@ -25,7 +25,7 @@ const server = http.createServer((req, res) => {
       const alive = !err && (
         process.platform === 'win32'
           ? stdout.includes('TTL=') || stdout.includes('ttl=')
-          : stdout.includes('1 packets transmitted, 1 received') || stdout.includes('1 received')
+          : stdout.includes('1 packets transmitted, 1 packets received') || stdout.includes('1 packets transmitted, 1 received') || stdout.includes('1 received')
       );
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ip, alive, ms: alive ? ms : null }));
@@ -51,7 +51,7 @@ const server = http.createServer((req, res) => {
         const alive = !err && (
           process.platform === 'win32'
             ? stdout.includes('TTL=') || stdout.includes('ttl=')
-            : stdout.includes('1 packets transmitted, 1 received') || stdout.includes('1 received')
+            : stdout.includes('1 packets transmitted, 1 packets received') || stdout.includes('1 packets transmitted, 1 received') || stdout.includes('1 received')
         );
         results[ip] = { alive, ms: alive ? ms : null };
         done++;
@@ -67,7 +67,7 @@ const server = http.createServer((req, res) => {
   res.writeHead(404); res.end('Not found');
 });
 
-server.listen(PORT, '127.0.0.1', () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Ping 服务已启动，端口 ${PORT}`);
   console.log(`   打开打包机管理页面即可使用 ping 检测功能`);
   console.log(`   按 Ctrl+C 停止`);
