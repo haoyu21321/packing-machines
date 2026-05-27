@@ -98,6 +98,32 @@
 
   .mono { font-family: monospace; font-size: 11px; }
   .dept-text { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Tab 切换 */
+  .tabs { background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; padding: 0 24px; flex-shrink: 0; }
+  .tab { padding: 10px 18px; cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent; color: #6b7280; }
+  .tab.active { border-bottom-color: #3b82f6; color: #1d4ed8; font-weight: 500; }
+
+  /* ping 状态 */
+  .ping-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+  .ping-ok   { background: #22c55e; }
+  .ping-fail { background: #ef4444; }
+  .ping-wait { background: #d1d5db; }
+  .ping-ing  { background: #f59e0b; animation: blink .8s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* 日志页 */
+  .log-wrap { flex: 1; overflow: auto; padding: 16px 24px; }
+  .log-list { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.08); overflow: hidden; }
+  .log-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 16px; border-bottom: 1px solid #f3f4f6; font-size: 12px; }
+  .log-item:last-child { border-bottom: none; }
+  .log-time { color: #9ca3af; white-space: nowrap; min-width: 130px; }
+  .log-action { padding: 1px 7px; border-radius: 8px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+  .log-add    { background: #dcfce7; color: #166534; }
+  .log-edit   { background: #dbeafe; color: #1e40af; }
+  .log-delete { background: #fee2e2; color: #991b1b; }
+  .log-import { background: #fef9c3; color: #854d0e; }
+  .log-empty  { text-align:center; padding: 60px; color: #9ca3af; }
 </style>
 </head>
 <body>
@@ -113,8 +139,15 @@
   </div>
 </div>
 
+<!-- Tab -->
+<div class="tabs">
+  <div class="tab active" id="tab-devices" onclick="switchTab('devices')">🖥 设备列表</div>
+  <div class="tab" id="tab-ping" onclick="switchTab('ping')">📡 Ping 检测</div>
+  <div class="tab" id="tab-log" onclick="switchTab('log')">📋 操作日志</div>
+</div>
+
 <!-- 搜索栏 -->
-<div class="toolbar">
+<div class="toolbar" id="panel-toolbar">
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
     <input type="text" id="searchInput" placeholder="搜索负责人、IP、MAC地址、资产编号、设备编号…" oninput="renderTable()">
@@ -137,8 +170,8 @@
   <span class="count-badge" id="countBadge">共 0 台</span>
 </div>
 
-<!-- 表格 -->
-<div class="table-wrap">
+<!-- 设备列表面板 -->
+<div id="panel-devices" class="table-wrap">
   <table>
     <thead>
       <tr>
@@ -167,6 +200,40 @@
     <div class="empty-icon">📭</div>
     <div>没有找到匹配的设备</div>
   </div>
+</div>
+
+<!-- Ping 检测面板 -->
+<div id="panel-ping" class="table-wrap" style="display:none">
+  <div style="margin-bottom:12px;display:flex;gap:10px;align-items:center">
+    <button class="btn btn-primary" onclick="pingAll()" id="btnPingAll">📡 一键检测全部</button>
+    <span id="pingStatus" style="font-size:12px;color:#6b7280"></span>
+    <span style="font-size:12px;color:#9ca3af;margin-left:auto">需先启动：<code style="background:#f3f4f6;padding:2px 6px;border-radius:4px">node ping-server.js</code></span>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>在线状态</th>
+        <th>延迟</th>
+        <th>机房编号</th>
+        <th>设备类型</th>
+        <th>负责人</th>
+        <th>IP 地址</th>
+        <th>存放位置</th>
+        <th>业务类型</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="pingTableBody"></tbody>
+  </table>
+</div>
+
+<!-- 操作日志面板 -->
+<div id="panel-log" class="log-wrap" style="display:none">
+  <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+    <span style="font-size:13px;color:#374151;font-weight:500">操作记录</span>
+    <button class="btn btn-danger" style="font-size:12px" onclick="clearLog()">清空日志</button>
+  </div>
+  <div class="log-list" id="logList"></div>
 </div>
 
 <!-- 新增/编辑弹窗 -->
@@ -452,6 +519,7 @@ function saveDevice() {
   } else {
     devices.push(d);
   }
+  addLog(editingId ? 'edit' : 'add', `${editingId ? '编辑' : '新增'}设备：${d.roomNo || d.ip || '未命名'}`);
   saveData();
   closeModal('editModal');
   renderTable();
@@ -468,6 +536,8 @@ function openDelete(id) {
   openModal('confirmModal');
 }
 function confirmDelete() {
+  const delDevice = devices.find(x => x.id === deletingId);
+  addLog('delete', `删除设备：${delDevice?.roomNo || delDevice?.ip || '未命名'}`);
   devices = devices.filter(x => x.id !== deletingId);
   saveData();
   closeModal('confirmModal');
@@ -544,6 +614,7 @@ function doImport(overwrite) {
   } else {
     devices = devices.concat(importData);
   }
+  addLog('import', `${overwrite ? '覆盖' : '追加'}导入 ${importData.length} 条设备数据`);
   saveData();
   closeModal('importModal');
   renderTable();
@@ -640,8 +711,136 @@ async function publishData() {
   }
 }
 
+// ========== Tab 切换 ==========
+let currentTab = 'devices';
+function switchTab(tab) {
+  currentTab = tab;
+  ['devices','ping','log'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+    const p = document.getElementById(`panel-${t}`);
+    if (p) p.style.display = t === tab ? '' : 'none';
+  });
+  document.getElementById('panel-toolbar').style.display = tab === 'devices' ? '' : 'none';
+  if (tab === 'log') renderLog();
+  if (tab === 'ping') renderPingTable();
+}
+
+// ========== 操作日志 ==========
+const LOG_KEY = 'packing_log_v1';
+let logs = [];
+
+function loadLog() {
+  try { logs = JSON.parse(localStorage.getItem(LOG_KEY) || '[]'); } catch(e) { logs = []; }
+}
+function saveLog() {
+  localStorage.setItem(LOG_KEY, JSON.stringify(logs.slice(0, 500)));
+}
+function addLog(action, desc) {
+  logs.unshift({ time: new Date().toLocaleString('zh-CN'), action, desc });
+  saveLog();
+}
+function clearLog() {
+  if (!confirm('确定清空全部操作日志？')) return;
+  logs = [];
+  saveLog();
+  renderLog();
+  toast('日志已清空');
+}
+function renderLog() {
+  const el = document.getElementById('logList');
+  if (logs.length === 0) {
+    el.innerHTML = '<div class="log-empty">暂无操作记录</div>';
+    return;
+  }
+  const typeMap = { add:'log-add', edit:'log-edit', delete:'log-delete', import:'log-import' };
+  const labelMap = { add:'新增', edit:'编辑', delete:'删除', import:'导入' };
+  el.innerHTML = logs.map(l => `
+    <div class="log-item">
+      <span class="log-time">${l.time}</span>
+      <span class="log-action ${typeMap[l.action]||''}">${labelMap[l.action]||l.action}</span>
+      <span style="color:#374151">${l.desc}</span>
+    </div>
+  `).join('');
+}
+
+// ========== Ping 检测 ==========
+const PING_PORT = 7789;
+let pingResults = {};
+
+function renderPingTable() {
+  const tbody = document.getElementById('pingTableBody');
+  tbody.innerHTML = devices.map(d => {
+    const r = pingResults[d.ip];
+    let dot, latency;
+    if (!d.ip) { dot = 'ping-wait'; latency = '无IP'; }
+    else if (!r) { dot = 'ping-wait'; latency = '未检测'; }
+    else if (r === 'checking') { dot = 'ping-ing'; latency = '检测中…'; }
+    else if (r.alive) { dot = 'ping-ok'; latency = `${r.ms}ms`; }
+    else { dot = 'ping-fail'; latency = '不通'; }
+    return `
+      <tr>
+        <td><span class="ping-dot ${dot}"></span>${dot==='ping-ok'?'在线':dot==='ping-fail'?'离线':dot==='ping-ing'?'检测中':'未知'}</td>
+        <td class="mono">${latency}</td>
+        <td><b>${d.roomNo||''}</b></td>
+        <td>${d.type||''}</td>
+        <td style="color:#1a3a6b;font-weight:500">${d.owner||''}</td>
+        <td class="mono">${d.ip||''}</td>
+        <td>${d.location||''}</td>
+        <td>${d.biz||''}</td>
+        <td><button class="btn btn-primary btn-sm" onclick="pingSingle('${d.ip}','${d.id}')" ${!d.ip?'disabled':''}>Ping</button></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function pingSingle(ip, id) {
+  if (!ip) return;
+  pingResults[ip] = 'checking';
+  renderPingTable();
+  try {
+    const res = await fetch(`http://127.0.0.1:${PING_PORT}/ping?ip=${ip}`, { signal: AbortSignal.timeout(5000) });
+    pingResults[ip] = await res.json();
+  } catch(e) {
+    pingResults[ip] = { alive: false, ms: null };
+    if (e.message.includes('Failed to fetch') || e.message.includes('fetch')) {
+      toast('连不上 ping-server，请先运行：node ping-server.js', 'error');
+    }
+  }
+  renderPingTable();
+}
+
+async function pingAll() {
+  const ips = [...new Set(devices.map(d => d.ip).filter(ip => ip && ip.trim()))];
+  if (ips.length === 0) { toast('没有可检测的IP', 'error'); return; }
+
+  ips.forEach(ip => pingResults[ip] = 'checking');
+  renderPingTable();
+
+  const btn = document.getElementById('btnPingAll');
+  btn.disabled = true;
+  btn.textContent = '检测中…';
+  document.getElementById('pingStatus').textContent = `正在检测 ${ips.length} 个IP…`;
+
+  try {
+    const res = await fetch(`http://127.0.0.1:${PING_PORT}/pingall?ips=${ips.join(',')}`, { signal: AbortSignal.timeout(30000) });
+    const data = await res.json();
+    Object.assign(pingResults, data);
+    const ok = Object.values(data).filter(r => r.alive).length;
+    document.getElementById('pingStatus').textContent = `检测完成：${ok} 在线 / ${ips.length - ok} 离线`;
+  } catch(e) {
+    ips.forEach(ip => { if (pingResults[ip] === 'checking') pingResults[ip] = { alive: false, ms: null }; });
+    toast('连不上 ping-server，请先运行：node ping-server.js', 'error');
+    document.getElementById('pingStatus').textContent = '';
+  }
+
+  btn.disabled = false;
+  btn.textContent = '📡 一键检测全部';
+  renderPingTable();
+}
+
 // ========== 初始化 ==========
 loadData();
+loadLog();
 renderTable();
 </script>
 </body>
