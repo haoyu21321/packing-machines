@@ -391,6 +391,29 @@
   </div>
 </div>
 
+<!-- 密码解锁弹窗 -->
+<div class="modal-overlay" id="passwordModal">
+  <div class="confirm-modal" style="width:380px">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:36px;margin-bottom:8px">🔐</div>
+      <h3 style="font-size:16px;color:#1a3a6b">进入编辑模式</h3>
+      <p style="color:#6b7280;font-size:13px;margin-top:6px">请输入编辑密码以解锁完整功能</p>
+    </div>
+    <div style="margin-bottom:16px">
+      <input type="password" id="passwordInput" placeholder="请输入密码"
+        style="width:100%;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;outline:none;text-align:center;letter-spacing:4px"
+        onkeydown="if(event.key==='Enter')confirmPassword()"
+        onfocus="this.style.borderColor='#3b82f6';this.style.boxShadow='0 0 0 2px rgba(59,130,246,.2)'"
+        onblur="this.style.borderColor='#d1d5db';this.style.boxShadow='none'">
+      <div id="passwordError" style="color:#ef4444;font-size:12px;margin-top:6px;text-align:center;display:none">❌ 密码错误，请重试</div>
+    </div>
+    <div class="confirm-btns">
+      <button class="btn btn-ghost" style="background:#f3f4f6;color:#374151;flex:1" onclick="closeModal('passwordModal')">取消</button>
+      <button class="btn btn-primary" style="flex:1" onclick="confirmPassword()">🔓 解锁</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast-wrap" id="toastWrap"></div>
 
@@ -400,16 +423,25 @@ const EDIT_PASSWORD = 'IT123456';
 let isEditMode = false;
 
 function unlockEdit() {
-  const input = prompt('请输入编辑密码：');
-  if (input === null) return;
+  document.getElementById('passwordInput').value = '';
+  document.getElementById('passwordError').style.display = 'none';
+  openModal('passwordModal');
+  setTimeout(() => document.getElementById('passwordInput').focus(), 100);
+}
+
+function confirmPassword() {
+  const input = document.getElementById('passwordInput').value;
   if (input === EDIT_PASSWORD) {
+    closeModal('passwordModal');
     isEditMode = true;
     document.getElementById('editControls').style.display = '';
     document.getElementById('lockControls').style.display = 'none';
     renderTable();
     toast('✅ 已进入编辑模式');
   } else {
-    toast('密码错误', 'error');
+    document.getElementById('passwordError').style.display = 'block';
+    document.getElementById('passwordInput').value = '';
+    document.getElementById('passwordInput').focus();
   }
 }
 
