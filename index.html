@@ -131,15 +131,18 @@
 <!-- 顶栏 -->
 <div class="topbar">
   <h1>🖥 打包机设备管理</h1>
-  <div class="topbar-right" id="editControls" style="display:none">
-    <button class="btn btn-ghost" onclick="openImport()">📥 导入 Excel</button>
-    <button class="btn btn-ghost" onclick="exportExcel()">📤 导出 Excel</button>
-    <button class="btn btn-success" onclick="publishData()" id="btnPublish">🚀 发布到线上</button>
-    <button class="btn btn-primary" onclick="openAdd()">＋ 新增设备</button>
-  </div>
-  <div id="lockControls">
-    <button class="btn btn-ghost" onclick="exportExcel()">📤 导出 Excel</button>
-    <button class="btn btn-ghost" onclick="unlockEdit()" style="background:rgba(255,255,255,.25)">🔒 编辑模式</button>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span id="syncStatus" style="font-size:11px;color:rgba(255,255,255,.6)"></span>
+    <div class="topbar-right" id="editControls" style="display:none">
+      <button class="btn btn-ghost" onclick="openImport()">📥 导入 Excel</button>
+      <button class="btn btn-ghost" onclick="exportExcel()">📤 导出 Excel</button>
+      <button class="btn btn-success" onclick="publishData()" id="btnPublish">🚀 发布到线上</button>
+      <button class="btn btn-primary" onclick="openAdd()">＋ 新增设备</button>
+    </div>
+    <div id="lockControls">
+      <button class="btn btn-ghost" onclick="exportExcel()">📤 导出 Excel</button>
+      <button class="btn btn-ghost" onclick="unlockEdit()" style="background:rgba(255,255,255,.25)">🔒 编辑模式</button>
+    </div>
   </div>
 </div>
 
@@ -170,6 +173,12 @@
     <option value="维修中">维修中</option>
     <option value="闲置">闲置</option>
     <option value="已下线">已下线</option>
+  </select>
+  <select class="filter-select" id="filterOwner" onchange="renderTable()">
+    <option value="">全部负责人</option>
+  </select>
+  <select class="filter-select" id="filterRoom" onchange="renderTable()">
+    <option value="">全部机房</option>
   </select>
   <span class="count-badge" id="countBadge">共 0 台</span>
 </div>
@@ -445,35 +454,101 @@ function confirmPassword() {
   }
 }
 
+// ========== Token 安全存储（简单混淆）==========
+function saveToken(t) {
+  localStorage.setItem('gh_token', btoa(t.split('').reverse().join('')));
+}
+function getToken() {
+  const s = localStorage.getItem('gh_token');
+  if (!s) return null;
+  try { return atob(s).split('').reverse().join(''); } catch(e) { return null; }
+}
+function clearToken() { localStorage.removeItem('gh_token'); }
+
 // ========== 数据层 ==========
 const STORE_KEY = 'packing_machines_v1';
+const GITHUB_OWNER = 'haoyu21321';
+const GITHUB_REPO  = 'packing-machines';
+const GITHUB_FILE  = 'data.json';
 let devices = [];
 let editingId = null;
 let deletingId = null;
 let importData = null;
+let lastSyncTime = null;
+
+function setSyncStatus(msg, color='rgba(255,255,255,.6)') {
+  const el = document.getElementById('syncStatus');
+  if (el) { el.textContent = msg; el.style.color = color; }
+}
+
+async function fetchFromGitHub() {
+  const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${GITHUB_FILE}?t=${Date.now()}`);
+  if (!res.ok) throw new Error('拉取失败');
+  return await res.json();
+}
 
 async function loadData() {
-  // 先用 localStorage 快速显示（避免白屏）
+  // 先用 localStorage 快速显示
   try { devices = JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch(e) { devices = []; }
   renderTable();
+  setSyncStatus('⏳ 同步中…');
 
-  // 再从 GitHub 拉取最新数据（保证多人编辑同步）
+  // 再从 GitHub 拉取最新数据
   try {
-    const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${GITHUB_FILE}?t=${Date.now()}`);
-    if (res.ok) {
-      const data = await res.json();
-      devices = data;
-      localStorage.setItem(STORE_KEY, JSON.stringify(devices));
-      renderTable();
-      renderPingTable();
-    }
+    const data = await fetchFromGitHub();
+    devices = data;
+    localStorage.setItem(STORE_KEY, JSON.stringify(devices));
+    lastSyncTime = new Date();
+    setSyncStatus(`✅ 已同步 ${formatTime(lastSyncTime)}`);
+    renderTable();
+    renderPingTable();
+    updateFilterOptions();
   } catch(e) {
-    // 离线时静默降级，使用本地缓存
-    console.warn('从 GitHub 加载数据失败，使用本地缓存', e);
+    setSyncStatus('⚠️ 离线（使用本地缓存）', 'rgba(255,200,0,.8)');
   }
 }
+
 function saveData() {
   localStorage.setItem(STORE_KEY, JSON.stringify(devices));
+}
+
+function formatTime(date) {
+  return date.toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
+}
+
+// ========== 自动定时刷新（5分钟）==========
+setInterval(async () => {
+  try {
+    const data = await fetchFromGitHub();
+    devices = data;
+    localStorage.setItem(STORE_KEY, JSON.stringify(devices));
+    lastSyncTime = new Date();
+    setSyncStatus(`✅ 已同步 ${formatTime(lastSyncTime)}`);
+    renderTable();
+    renderPingTable();
+    updateFilterOptions();
+  } catch(e) {}
+}, 5 * 60 * 1000);
+
+// ========== 动态筛选选项 ==========
+function updateFilterOptions() {
+  const ownerSel = document.getElementById('filterOwner');
+  const roomSel  = document.getElementById('filterRoom');
+  const curOwner = ownerSel.value;
+  const curRoom  = roomSel.value;
+
+  const owners = [...new Set(devices.map(d => d.owner).filter(Boolean))].sort();
+  const rooms  = [...new Set(devices.map(d => {
+    // 提取机房名（E5机房、F6机房、ABD主机房等）
+    const m = (d.location || '').match(/^(.+?机房)/);
+    return m ? m[1] : '';
+  }).filter(Boolean))].sort();
+
+  ownerSel.innerHTML = '<option value="">全部负责人</option>' + owners.map(o => `<option value="${o}">${o}</option>`).join('');
+  roomSel.innerHTML  = '<option value="">全部机房</option>'  + rooms.map(r => `<option value="${r}">${r}</option>`).join('');
+
+  ownerSel.value = curOwner;
+  roomSel.value  = curRoom;
 }
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2,6);
@@ -490,12 +565,16 @@ function statusBadge(s) {
 
 function renderTable() {
   const q = document.getElementById('searchInput').value.trim().toLowerCase();
-  const fType = document.getElementById('filterType').value;
+  const fType   = document.getElementById('filterType').value;
   const fStatus = document.getElementById('filterStatus').value;
+  const fOwner  = document.getElementById('filterOwner').value;
+  const fRoom   = document.getElementById('filterRoom').value;
 
   let list = devices.filter(d => {
-    if (fType && d.type !== fType) return false;
+    if (fType   && d.type !== fType) return false;
     if (fStatus && d.status !== fStatus) return false;
+    if (fOwner  && d.owner !== fOwner) return false;
+    if (fRoom   && !(d.location || '').includes(fRoom)) return false;
     if (!q) return true;
     return [d.owner,d.assetOwner,d.ip,d.mac,d.assetNo,d.serial,d.roomNo,d.dept,d.biz,d.location].some(v => v && v.toLowerCase().includes(q));
   });
@@ -733,36 +812,46 @@ function toast(msg, type='success') {
 }
 
 // ========== 发布到线上 ==========
-const GITHUB_OWNER = 'haoyu21321';
-const GITHUB_REPO  = 'packing-machines';
-const GITHUB_FILE  = 'data.json';
-
 async function publishData() {
   if (devices.length === 0) { toast('暂无数据可发布', 'error'); return; }
 
-  const token = localStorage.getItem('gh_token');
-  if (!token) {
+  let ghToken = getToken();
+  if (!ghToken) {
     const t = prompt('请输入你的 GitHub Personal Access Token（只需首次输入）：\n\n获取地址：github.com → Settings → Developer settings → Personal access tokens → Tokens (classic)\n权限勾选：repo');
     if (!t) return;
-    localStorage.setItem('gh_token', t.trim());
+    saveToken(t.trim());
+    ghToken = t.trim();
   }
 
   const btn = document.getElementById('btnPublish');
-  btn.textContent = '发布中…';
+  btn.textContent = '检查冲突…';
   btn.disabled = true;
 
   try {
-    const ghToken = localStorage.getItem('gh_token');
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(devices, null, 2))));
-
-    // 先获取现有文件的 SHA（更新文件需要）
+    // 先拉最新数据，检查是否有冲突
     let sha = null;
+    let remoteCount = 0;
     const getRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
       headers: { 'Authorization': `token ${ghToken}`, 'Accept': 'application/vnd.github.v3+json' }
     });
-    if (getRes.ok) { const j = await getRes.json(); sha = j.sha; }
+    if (getRes.ok) {
+      const j = await getRes.json();
+      sha = j.sha;
+      // 解码远端数据，检查条数
+      const remoteData = JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));
+      remoteCount = remoteData.length;
+      // 如果远端比本地多（说明有人在我们之后发布了），提示用户
+      if (remoteCount !== devices.length) {
+        const go = confirm(`⚠️ 注意：线上数据（${remoteCount}条）与你当前数据（${devices.length}条）不一致，可能有人已修改过。\n\n确定要用你的版本覆盖吗？`);
+        if (!go) {
+          toast('已取消发布', 'error');
+          return;
+        }
+      }
+    }
 
-    // 上传 data.json
+    btn.textContent = '发布中…';
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(devices, null, 2))));
     const putRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
       method: 'PUT',
       headers: { 'Authorization': `token ${ghToken}`, 'Content-Type': 'application/json' },
@@ -772,7 +861,7 @@ async function publishData() {
     if (!putRes.ok) {
       const err = await putRes.json();
       if (err.message && err.message.includes('Bad credentials')) {
-        localStorage.removeItem('gh_token');
+        clearToken();
         toast('Token 无效，已清除，请重试', 'error');
       } else {
         toast('发布失败：' + err.message, 'error');
@@ -780,6 +869,8 @@ async function publishData() {
       return;
     }
 
+    lastSyncTime = new Date();
+    setSyncStatus(`✅ 已同步 ${formatTime(lastSyncTime)}`);
     toast('✅ 发布成功！线上页面约30秒后更新');
   } catch(e) {
     toast('发布失败：' + e.message, 'error');
@@ -928,6 +1019,7 @@ async function pingAll() {
 loadData(); // async，自动从 GitHub 同步最新数据
 loadLog();
 renderTable();
+updateFilterOptions();
 </script>
 </body>
 </html>
