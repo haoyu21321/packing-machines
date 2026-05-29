@@ -203,6 +203,51 @@
   .custom-select-option.selected { background: #dbeafe; color: #1d4ed8; font-weight: 600; }
   .custom-select-option.selected::before { content: '✓ '; }
 
+  /* 故障库 */
+  .fault-wrap { flex: 1; overflow: auto; padding: 16px 24px; }
+  .fault-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+  .fault-search { position: relative; }
+  .fault-search input { padding: 8px 12px 8px 34px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none; width: 260px; background: #f8fafc; transition: all .2s; }
+  .fault-search input:focus { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 3px rgba(59,130,246,.12); }
+  .fault-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+  .fault-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
+  .fault-card {
+    background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.07);
+    border: 1.5px solid #f1f5f9; overflow: hidden;
+    transition: all .22s cubic-bezier(.4,0,.2,1);
+    animation: rowIn .2s ease both;
+  }
+  .fault-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,.12); border-color: #bfdbfe; }
+  .fault-card-header { padding: 14px 16px 10px; display: flex; align-items: flex-start; gap: 10px; border-bottom: 1px solid #f1f5f9; }
+  .fault-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg,#fee2e2,#fecaca); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .fault-title { font-size: 14px; font-weight: 700; color: #1e293b; line-height: 1.4; }
+  .fault-device { display: inline-block; margin-top: 4px; padding: 2px 8px; background: #eff6ff; color: #2563eb; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .fault-card-body { padding: 12px 16px; }
+  .fault-section { margin-bottom: 10px; }
+  .fault-section:last-child { margin-bottom: 0; }
+  .fault-label { font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 5px; }
+  .fault-steps { padding-left: 16px; }
+  .fault-steps li { font-size: 12px; color: #475569; line-height: 1.8; }
+  .fault-contact { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .fault-card-footer { padding: 10px 16px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 6px; background: #fafafa; }
+  .fault-empty { text-align: center; padding: 80px; color: #94a3b8; }
+  .fault-empty-icon { font-size: 56px; margin-bottom: 14px; opacity: .5; }
+
+  .fault-imgs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .fault-img-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #e2e8f0; transition: all .2s; }
+  .fault-img-thumb:hover { border-color: #3b82f6; transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+  .fault-img-upload { width: 80px; height: 80px; border: 2px dashed #cbd5e1; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; color: #94a3b8; font-size: 11px; gap: 4px; transition: all .2s; }
+  .fault-img-upload:hover { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
+  .fault-img-wrap { position: relative; display: inline-block; }
+  .fault-img-del { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; background: #ef4444; color: #fff; border-radius: 50%; font-size: 11px; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity .15s; line-height: 1; }
+  .fault-img-wrap:hover .fault-img-del { opacity: 1; }
+
+  /* 图片灯箱 */
+  .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 9999; align-items: center; justify-content: center; cursor: zoom-out; backdrop-filter: blur(6px); }
+  .lightbox.show { display: flex; }
+  .lightbox img { max-width: 90vw; max-height: 88vh; border-radius: 12px; box-shadow: 0 24px 80px rgba(0,0,0,.5); transform: scale(.9); opacity: 0; transition: all .28s cubic-bezier(.34,1.4,.64,1); }
+  .lightbox.show img { transform: scale(1); opacity: 1; }
+
   /* 滚动条美化 */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -234,6 +279,7 @@
 <div class="tabs">
   <div class="tab active" id="tab-devices" onclick="switchTab('devices')">🖥 设备列表</div>
   <div class="tab" id="tab-ping" onclick="switchTab('ping')">📡 Ping 检测</div>
+  <div class="tab" id="tab-fault" onclick="switchTab('fault')">🔧 常见故障</div>
   <div class="tab" id="tab-log" onclick="switchTab('log')">📋 操作日志</div>
 </div>
 
@@ -367,6 +413,71 @@
     </thead>
     <tbody id="pingTableBody"></tbody>
   </table>
+</div>
+
+<!-- 常见故障面板 -->
+<div id="panel-fault" class="fault-wrap" style="display:none">
+  <div class="fault-toolbar">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="fault-search">
+        <span class="fault-search-icon">🔍</span>
+        <input type="text" id="faultSearch" placeholder="搜索故障现象…" oninput="renderFaults()">
+      </div>
+      <span class="count-badge" id="faultCount">共 0 条</span>
+    </div>
+    <button class="btn btn-primary" id="btnAddFault" onclick="openAddFault()" style="display:none">＋ 新增故障</button>
+  </div>
+  <div class="fault-grid" id="faultGrid"></div>
+  <div class="fault-empty" id="faultEmpty" style="display:none">
+    <div class="fault-empty-icon">🔧</div>
+    <div>暂无故障记录</div>
+  </div>
+</div>
+
+<!-- 故障新增/编辑弹窗 -->
+<div class="modal-overlay" id="faultModal">
+  <div class="modal" style="width:560px">
+    <div class="modal-header">
+      <h2 id="faultModalTitle">新增故障</h2>
+      <button class="modal-close" onclick="closeModal('faultModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="form-group">
+          <label>故障现象 *</label>
+          <input id="ff_title" placeholder="如：机器无法连接 CI 系统">
+        </div>
+        <div class="form-group">
+          <label>适用设备类型</label>
+          <select id="ff_device">
+            <option value="通用">通用（所有设备）</option>
+            <option value="MAC-mini">MAC-mini</option>
+            <option value="MAC PRO">MAC PRO</option>
+            <option value="服务器">服务器</option>
+            <option value="windows台式机">Windows台式机</option>
+            <option value="NAS">NAS</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>解决步骤 *（每行一步）</label>
+          <textarea id="ff_steps" placeholder="重启机器&#10;检查网络连接是否正常&#10;联系管理员" style="min-height:120px"></textarea>
+        </div>
+        <div class="form-group">
+          <label>联系谁处理</label>
+          <input id="ff_contact" placeholder="如：杨浩宇 / IT运维群">
+        </div>
+        <div class="form-group">
+          <label>相关图片（可选，支持多张）</label>
+          <div class="fault-imgs" id="ff_imgs_preview"></div>
+          <input type="file" id="ff_imgs_input" accept="image/*" multiple style="display:none" onchange="handleFaultImgs(this)">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" style="background:#f1f5f9;color:#374151" onclick="closeModal('faultModal')">取消</button>
+      <button class="btn btn-primary" onclick="saveFault()">保存</button>
+    </div>
+  </div>
 </div>
 
 <!-- 操作日志面板 -->
@@ -548,6 +659,11 @@
 </div>
 
 <!-- Toast -->
+<!-- 图片灯箱 -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightboxImg" src="">
+</div>
+
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
@@ -606,6 +722,7 @@ function confirmPassword() {
     document.getElementById('editControls').style.display = '';
     document.getElementById('lockControls').style.display = 'none';
     renderTable();
+    updateFaultEditBtn();
     toast('✅ 已进入编辑模式');
   } else {
     document.getElementById('passwordError').style.display = 'block';
@@ -1057,14 +1174,15 @@ async function publishData() {
 let currentTab = 'devices';
 function switchTab(tab) {
   currentTab = tab;
-  ['devices','ping','log'].forEach(t => {
+  ['devices','ping','fault','log'].forEach(t => {
     document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
     const p = document.getElementById(`panel-${t}`);
     if (p) p.style.display = t === tab ? '' : 'none';
   });
   document.getElementById('panel-toolbar').style.display = tab === 'devices' ? '' : 'none';
-  if (tab === 'log') renderLog();
-  if (tab === 'ping') renderPingTable();
+  if (tab === 'log')   renderLog();
+  if (tab === 'ping')  renderPingTable();
+  if (tab === 'fault') renderFaults();
 }
 
 // ========== 操作日志 ==========
@@ -1188,9 +1306,196 @@ async function pingAll() {
   renderPingTable();
 }
 
+// ========== 常见故障库 ==========
+const FAULT_KEY = 'packing_faults_v1';
+let faults = [];
+let editingFaultId = null;
+let faultImgsBuffer = []; // 当前编辑中的图片 base64 列表
+
+// 图片处理
+function handleFaultImgs(input) {
+  const files = Array.from(input.files);
+  files.forEach(file => {
+    if (faultImgsBuffer.length >= 6) { toast('最多上传6张图片', 'error'); return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+      faultImgsBuffer.push(e.target.result);
+      renderFaultImgsPreview();
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function renderFaultImgsPreview() {
+  const wrap = document.getElementById('ff_imgs_preview');
+  wrap.innerHTML = faultImgsBuffer.map((src, i) => `
+    <div class="fault-img-wrap">
+      <img src="${src}" class="fault-img-thumb" onclick="openLightbox('${src}')">
+      <div class="fault-img-del" onclick="removeFaultImg(${i})">×</div>
+    </div>
+  `).join('') + (faultImgsBuffer.length < 6 ? `
+    <div class="fault-img-upload" onclick="document.getElementById('ff_imgs_input').click()">
+      <span style="font-size:22px">＋</span>
+      <span>添加图片</span>
+    </div>` : '');
+}
+
+function removeFaultImg(idx) {
+  faultImgsBuffer.splice(idx, 1);
+  renderFaultImgsPreview();
+}
+
+// 灯箱
+function openLightbox(src) {
+  const lb = document.getElementById('lightbox');
+  document.getElementById('lightboxImg').src = src;
+  lb.style.display = 'flex';
+  requestAnimationFrame(() => requestAnimationFrame(() => lb.classList.add('show')));
+}
+function closeLightbox() {
+  const lb = document.getElementById('lightbox');
+  lb.classList.remove('show');
+  setTimeout(() => { lb.style.display = 'none'; }, 280);
+}
+
+function loadFaults() {
+  try { faults = JSON.parse(localStorage.getItem(FAULT_KEY) || '[]'); } catch(e) { faults = []; }
+}
+function saveFaults() {
+  localStorage.setItem(FAULT_KEY, JSON.stringify(faults));
+}
+
+// 编辑模式解锁/锁定时同步显示新增按钮
+function updateFaultEditBtn() {
+  const btn = document.getElementById('btnAddFault');
+  if (btn) btn.style.display = isEditMode ? '' : 'none';
+}
+
+function renderFaults() {
+  updateFaultEditBtn();
+  const q = (document.getElementById('faultSearch')?.value || '').trim().toLowerCase();
+  const list = q ? faults.filter(f => f.title.toLowerCase().includes(q) || (f.steps||'').toLowerCase().includes(q)) : faults;
+
+  document.getElementById('faultCount').textContent = `共 ${list.length} 条`;
+  const grid = document.getElementById('faultGrid');
+  const empty = document.getElementById('faultEmpty');
+
+  if (list.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const deviceIcons = { 'MAC-mini':'🖥', 'MAC PRO':'💻', '服务器':'🖧', 'windows台式机':'🪟', 'NAS':'💾', '通用':'⚙️' };
+
+  grid.innerHTML = list.map((f, i) => {
+    const steps = (f.steps || '').split('\n').filter(s => s.trim());
+    return `
+    <div class="fault-card" style="animation-delay:${i * 0.04}s">
+      <div class="fault-card-header">
+        <div class="fault-icon">${deviceIcons[f.device] || '⚙️'}</div>
+        <div style="flex:1">
+          <div class="fault-title">${f.title}</div>
+          <span class="fault-device">${f.device || '通用'}</span>
+        </div>
+      </div>
+      <div class="fault-card-body">
+        <div class="fault-section">
+          <div class="fault-label">解决步骤</div>
+          <ol class="fault-steps">
+            ${steps.map(s => `<li>${s}</li>`).join('')}
+          </ol>
+        </div>
+        ${f.contact ? `
+        <div class="fault-section">
+          <div class="fault-label">联系处理</div>
+          <span class="fault-contact">👤 ${f.contact}</span>
+        </div>` : ''}
+        ${f.imgs && f.imgs.length > 0 ? `
+        <div class="fault-section">
+          <div class="fault-label">相关图片</div>
+          <div class="fault-imgs">
+            ${f.imgs.map(src => `<img src="${src}" class="fault-img-thumb" onclick="openLightbox('${src}')" style="cursor:pointer;">`).join('')}
+          </div>
+        </div>` : ''}
+      </div>
+      ${isEditMode ? `
+      <div class="fault-card-footer">
+        <button class="btn btn-warning btn-sm" onclick="openEditFault('${f.id}')">编辑</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteFault('${f.id}')">删除</button>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function openAddFault() {
+  editingFaultId = null;
+  faultImgsBuffer = [];
+  document.getElementById('faultModalTitle').textContent = '新增故障';
+  document.getElementById('ff_title').value = '';
+  document.getElementById('ff_device').value = '通用';
+  document.getElementById('ff_steps').value = '';
+  document.getElementById('ff_contact').value = '';
+  renderFaultImgsPreview();
+  openModal('faultModal');
+}
+
+function openEditFault(id) {
+  const f = faults.find(x => x.id === id);
+  if (!f) return;
+  editingFaultId = id;
+  faultImgsBuffer = f.imgs ? [...f.imgs] : [];
+  document.getElementById('faultModalTitle').textContent = '编辑故障';
+  document.getElementById('ff_title').value = f.title || '';
+  document.getElementById('ff_device').value = f.device || '通用';
+  document.getElementById('ff_steps').value = f.steps || '';
+  document.getElementById('ff_contact').value = f.contact || '';
+  renderFaultImgsPreview();
+  openModal('faultModal');
+}
+
+function saveFault() {
+  const title = document.getElementById('ff_title').value.trim();
+  const steps = document.getElementById('ff_steps').value.trim();
+  if (!title) { toast('请填写故障现象', 'error'); return; }
+  if (!steps)  { toast('请填写解决步骤', 'error'); return; }
+
+  const f = {
+    id: editingFaultId || Date.now().toString(36) + Math.random().toString(36).slice(2,4),
+    title,
+    device: document.getElementById('ff_device').value,
+    steps,
+    contact: document.getElementById('ff_contact').value.trim(),
+    imgs: [...faultImgsBuffer],
+  };
+
+  if (editingFaultId) {
+    const idx = faults.findIndex(x => x.id === editingFaultId);
+    if (idx >= 0) faults[idx] = f;
+  } else {
+    faults.push(f);
+  }
+
+  saveFaults();
+  closeModal('faultModal');
+  renderFaults();
+  toast(editingFaultId ? '故障记录已更新' : '故障记录已添加');
+}
+
+function deleteFault(id) {
+  if (!confirm('确定删除这条故障记录？')) return;
+  faults = faults.filter(x => x.id !== id);
+  saveFaults();
+  renderFaults();
+  toast('已删除', 'error');
+}
+
 // ========== 初始化 ==========
 loadData(); // async，自动从 GitHub 同步最新数据
 loadLog();
+loadFaults();
 renderTable();
 updateFilterOptions();
 </script>
