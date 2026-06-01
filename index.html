@@ -1084,9 +1084,12 @@ async function loadData() {
   try {
     const data = await fetchFromGitHub();
     devices = data.devices;
-    faults = data.faults || [];
+    // 只有新格式才更新故障数据，旧格式(纯数组)保留本地故障
+    if (data.faults !== undefined) {
+      faults = data.faults;
+      localStorage.setItem(FAULT_KEY, JSON.stringify(faults));
+    }
     localStorage.setItem(STORE_KEY, JSON.stringify(devices));
-    localStorage.setItem(FAULT_KEY, JSON.stringify(faults));
     lastSyncTime = new Date();
     setSyncStatus(`✅ 已同步 ${formatTime(lastSyncTime)}`);
     renderTable();
@@ -1111,9 +1114,11 @@ setInterval(async () => {
   try {
     const data = await fetchFromGitHub();
     devices = data.devices;
-    faults = data.faults || [];
+    if (data.faults !== undefined) {
+      faults = data.faults;
+      localStorage.setItem(FAULT_KEY, JSON.stringify(faults));
+    }
     localStorage.setItem(STORE_KEY, JSON.stringify(devices));
-    localStorage.setItem(FAULT_KEY, JSON.stringify(faults));
     lastSyncTime = new Date();
     setSyncStatus(`✅ 已同步 ${formatTime(lastSyncTime)}`);
     renderTable();
