@@ -331,7 +331,7 @@
   .chart-bar-count { min-width:32px; color:#6b7280; font-weight:700; font-size:12px; text-align:right; }
 
   /* ===== 批量操作浮动栏 ===== */
-  .batch-bar { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); z-index:800; background:#1e293b; color:#fff; border-radius:14px; padding:10px 16px; display:flex; align-items:center; gap:10px; box-shadow:0 8px 32px rgba(0,0,0,.3); transition:transform .3s cubic-bezier(.34,1.4,.64,1); white-space:nowrap; }
+  .batch-bar { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(calc(100% + 40px)); z-index:800; background:#1e293b; color:#fff; border-radius:14px; padding:10px 16px; display:flex; align-items:center; gap:10px; box-shadow:0 8px 32px rgba(0,0,0,.3); transition:transform .3s cubic-bezier(.34,1.4,.64,1); white-space:nowrap; }
   .batch-bar.show { transform:translateX(-50%) translateY(0); }
   .batch-bar-count { font-size:13px; font-weight:600; }
   .batch-bar-div { width:1px; height:20px; background:rgba(255,255,255,.2); flex-shrink:0; }
@@ -410,6 +410,12 @@
   body.dark .history-item { border-color:#334155; }
   body.dark .history-action { color:#e2e8f0; }
   body.dark .history-change-row { color:#94a3b8; }
+  body.dark .mobile-card { background:#1e293b; border-color:#334155; }
+  body.dark .mc-header { border-color:#334155; }
+  body.dark .mc-footer { background:#162032; border-color:#334155; }
+  body.dark .mc-id { color:#93c5fd; }
+  body.dark .mc-type { color:#64748b; }
+  body.dark .mc-label { color:#475569; }
   body.dark .stats-wrap { background:transparent; }
   body.dark .stats-header h2 { color:#e2e8f0; }
   body.dark .chart-title { color:#e2e8f0; }
@@ -417,15 +423,32 @@
   body.dark .chart-bar-count { color:#64748b; }
   body.dark .chart-bar-track { background:#334155; }
 
+  /* ===== 移动端卡片列表 ===== */
+  .mobile-card-list { display:none; }
+  .mobile-card { background:#fff; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,.07); border:1.5px solid #f1f5f9; margin-bottom:10px; overflow:hidden; animation:rowIn .2s ease both; }
+  .mc-header { padding:12px 14px 8px; display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #f3f4f6; }
+  .mc-id { font-size:14px; font-weight:700; color:#1a3a6b; }
+  .mc-type { font-size:11px; color:#94a3b8; margin-top:2px; }
+  .mc-body { padding:10px 14px; display:flex; flex-direction:column; gap:5px; }
+  .mc-row { display:flex; align-items:baseline; gap:6px; font-size:12px; }
+  .mc-label { color:#94a3b8; font-size:11px; font-weight:600; min-width:44px; flex-shrink:0; }
+  .mc-footer { padding:8px 14px; border-top:1px solid #f3f4f6; background:#fafafa; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .mc-cb { margin-right:4px; width:16px; height:16px; cursor:pointer; }
+
   /* ===== 移动端 ===== */
   @media(max-width:768px){
-    .topbar { padding:0 12px; height:50px; }
-    .topbar h1 { font-size:13px; }
+    .topbar { padding:0 10px; height:auto; min-height:50px; flex-wrap:wrap; gap:0; }
+    .topbar h1 { font-size:13px; padding:6px 0; }
+    .topbar > div { padding:6px 0; }
     .btn { padding:5px 10px; font-size:11px; }
-    .toolbar { padding:8px 12px; gap:6px; }
-    .search-wrap { min-width:140px; }
-    .custom-select-btn { min-width:80px; font-size:11px; padding:6px 8px; }
-    .table-wrap { padding:8px 12px; }
+    #editControls .btn span, #lockControls .btn span { display:none; }
+    .toolbar { padding:8px 10px; gap:6px; overflow-x:auto; flex-wrap:nowrap; }
+    .toolbar .search-wrap { min-width:140px; flex-shrink:0; }
+    .custom-select-btn { min-width:72px; font-size:11px; padding:6px 8px; }
+    .table-wrap { padding:8px 10px; }
+    table { display:none; }
+    .mobile-card-list { display:block; }
+    #emptyState { background:#fff; border-radius:12px; padding:48px 20px; }
     .tabs { padding:0 8px; gap:0; overflow-x:auto; }
     .tab { padding:10px 12px; font-size:12px; white-space:nowrap; }
     .stats-summary { grid-template-columns:repeat(2,1fr); gap:10px; }
@@ -436,11 +459,10 @@
     .modal { width:95vw !important; }
     .confirm-modal { width:90vw !important; padding:20px; }
     .form-grid { grid-template-columns:1fr; }
-    .fault-wrap, .log-wrap { padding:8px 12px; }
-    .stats-wrap { padding:8px 12px; }
-    .batch-bar { width:calc(100% - 24px); border-radius:10px; flex-wrap:wrap; justify-content:center; }
+    .fault-wrap, .log-wrap { padding:8px 10px; }
+    .stats-wrap { padding:8px 10px; }
+    .batch-bar { width:calc(100% - 20px); border-radius:10px; flex-wrap:wrap; justify-content:center; gap:8px; padding:10px 12px; }
     .topbar-right { gap:4px; }
-    .topbar-right .btn span { display:none; }
   }
 </style>
 </head>
@@ -452,14 +474,14 @@
   <div style="display:flex;align-items:center;gap:12px">
     <span id="syncStatus" style="font-size:11px;color:rgba(255,255,255,.6)"></span>
     <div class="topbar-right" id="editControls" style="display:none">
-      <button class="btn btn-ghost" onclick="openImport()">📥 导入 Excel</button>
-      <button class="btn btn-ghost" onclick="exportExcel()">📤 导出 Excel</button>
-      <button class="btn btn-success" onclick="publishData()" id="btnPublish">🚀 发布到线上</button>
-      <button class="btn btn-primary" onclick="openAdd()">＋ 新增设备</button>
+      <button class="btn btn-ghost" onclick="openImport()">📥 <span>导入 Excel</span></button>
+      <button class="btn btn-ghost" onclick="exportExcel()">📤 <span>导出 Excel</span></button>
+      <button class="btn btn-success" onclick="publishData()" id="btnPublish">🚀 <span>发布到线上</span></button>
+      <button class="btn btn-primary" onclick="openAdd()">＋ <span>新增设备</span></button>
     </div>
     <div id="lockControls">
-      <button class="btn btn-ghost" onclick="exportExcel()">📤 导出 Excel</button>
-      <button class="btn btn-ghost" onclick="unlockEdit()" style="background:rgba(255,255,255,.25)">🔒 编辑模式</button>
+      <button class="btn btn-ghost" onclick="exportExcel()">📤 <span>导出 Excel</span></button>
+      <button class="btn btn-ghost" onclick="unlockEdit()" style="background:rgba(255,255,255,.25)">🔒 <span>编辑模式</span></button>
     </div>
     <button class="btn btn-ghost" id="btnDark" onclick="toggleDark()" title="切换暗色模式" style="font-size:16px;padding:5px 9px;min-width:34px">🌙</button>
   </div>
@@ -571,6 +593,7 @@
     </thead>
     <tbody id="tableBody"></tbody>
   </table>
+  <div id="mobileCardList" class="mobile-card-list"></div>
   <div class="empty" id="emptyState" style="display:none">
     <div class="empty-icon">📭</div>
     <div>没有找到匹配的设备</div>
@@ -1140,8 +1163,10 @@ function renderTable() {
   document.getElementById('countBadge').textContent = `共 ${list.length} 台`;
 
   const tbody = document.getElementById('tableBody');
+  const mobileList = document.getElementById('mobileCardList');
   if (list.length === 0) {
     tbody.innerHTML = '';
+    mobileList.innerHTML = '';
     document.getElementById('emptyState').style.display = 'block';
     return;
   }
@@ -1178,6 +1203,32 @@ function renderTable() {
         </div>
       </td>
     </tr>
+  `).join('');
+
+  // 移动端卡片渲染
+  mobileList.innerHTML = list.map(d => `
+    <div class="mobile-card">
+      <div class="mc-header">
+        <div>
+          ${isEditMode ? `<input type="checkbox" class="mc-cb row-check" data-id="${d.id}" ${selectedIds.has(d.id)?'checked':''} onchange="toggleSelectRow(this)">` : ''}
+          <span class="mc-id">${d.roomNo||'—'}</span>
+          <div class="mc-type">${d.type||''}</div>
+        </div>
+        ${statusBadge(d.status)}
+      </div>
+      <div class="mc-body">
+        ${d.owner ? `<div class="mc-row"><span class="mc-label">负责人</span><b style="color:#1a3a6b">${d.owner}</b></div>` : ''}
+        ${d.ip ? `<div class="mc-row"><span class="mc-label">IP</span><span class="mono">${d.ip}</span></div>` : ''}
+        ${d.location ? `<div class="mc-row"><span class="mc-label">位置</span><span>${d.location}</span></div>` : ''}
+        ${d.serial ? `<div class="mc-row"><span class="mc-label">序列号</span><span class="mono" style="font-size:11px">${d.serial}</span></div>` : ''}
+        ${d.notice ? `<div class="mc-row"><span class="mc-label">注意</span><span style="color:#d97706">${d.notice}</span></div>` : ''}
+      </div>
+      <div class="mc-footer">
+        <button class="btn btn-sm" style="background:#f1f5f9;color:#374151" onclick="openHistory('${d.id}')">📋 历史</button>
+        ${isEditMode ? `<button class="btn btn-warning btn-sm" onclick="openEdit('${d.id}')">编辑</button>
+        <button class="btn btn-danger btn-sm" onclick="openDelete('${d.id}')">删除</button>` : ''}
+      </div>
+    </div>
   `).join('');
 }
 
