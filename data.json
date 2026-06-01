@@ -2038,5 +2038,33 @@
     "location": "E5机房2柜1层51号",
     "remark": "",
     "serial": "VT89X5996V9"
+  },
+  {
+    "id": "mpuzaeotpvuo",
+    "roomNo": "测试",
+    "type": "MAC-mini",
+    "owner": "测试",
+    "assetOwner": "测试",
+    "ip": "测试",
+    "mac": "测试",
+    "assetNo": "测试",
+    "serial": "测试",
+    "dept": "测试",
+    "biz": "测试",
+    "location": "测试",
+    "os": "测试",
+    "idle": "测试",
+    "ipBound": "是",
+    "status": "正常运行",
+    "func": "",
+    "notice": "",
+    "remark": "",
+    "history": [
+      {
+        "time": "2026/6/1 17:00:25",
+        "action": "create",
+        "changes": []
+      }
+    ]
   }
 ]
