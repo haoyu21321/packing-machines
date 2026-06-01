@@ -1069,7 +1069,8 @@ async function fetchFromGitHub() {
   if (!res.ok) throw new Error('拉取失败');
   const raw = await res.json();
   // 兼容旧格式（纯数组）和新格式（{devices, faults}）
-  if (Array.isArray(raw)) return { devices: raw, faults: [] };
+  // 旧格式不设 faults 字段，保留本地故障数据
+  if (Array.isArray(raw)) return { devices: raw };
   return raw;
 }
 
