@@ -821,6 +821,38 @@
   </div>
 </div>
 
+<!-- 冲突确认弹窗 -->
+<div class="modal-overlay" id="conflictModal">
+  <div class="confirm-modal" style="width:420px;padding:0;overflow:hidden;border-radius:16px">
+    <div style="background:linear-gradient(135deg,#fef9c3,#fef3c7);padding:24px 28px 20px;border-bottom:1px solid #fde68a">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;background:#f59e0b;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">⚠️</div>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:#92400e">数据冲突提醒</div>
+          <div style="font-size:12px;color:#a16207;margin-top:2px">发布前请确认</div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:20px 28px">
+      <p style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:16px" id="conflictMsg"></p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#f8fafc;border-radius:10px;padding:14px;border:1px solid #e2e8f0;margin-bottom:20px">
+        <div style="text-align:center">
+          <div style="font-size:22px;font-weight:800;color:#2563eb" id="conflictRemote">—</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:2px">线上条数</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:22px;font-weight:800;color:#16a34a" id="conflictLocal">—</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:2px">本地条数</div>
+        </div>
+      </div>
+      <div class="confirm-btns">
+        <button class="btn" style="flex:1;background:#f1f5f9;color:#374151" onclick="resolveConflict(false)">取消</button>
+        <button class="btn btn-warning" style="flex:1" onclick="resolveConflict(true)">确定覆盖</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 删除确认弹窗 -->
 <div class="modal-overlay" id="confirmModal">
   <div class="confirm-modal">
@@ -1398,6 +1430,10 @@ async function publishData() {
     const getRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
       headers: { 'Authorization': `token ${ghToken}`, 'Accept': 'application/vnd.github.v3+json' }
     });
+    // 在任何 await 之前先快照，防止等待期间自动同步覆盖 devices
+    const snapshot = JSON.stringify(devices, null, 2);
+    const snapshotLen = devices.length;
+
     if (getRes.ok) {
       const j = await getRes.json();
       sha = j.sha;
@@ -1405,17 +1441,19 @@ async function publishData() {
       const remoteData = JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));
       remoteCount = remoteData.length;
       // 如果远端比本地多（说明有人在我们之后发布了），提示用户
-      if (remoteCount !== devices.length) {
-        const go = confirm(`⚠️ 注意：线上数据（${remoteCount}条）与你当前数据（${devices.length}条）不一致，可能有人已修改过。\n\n确定要用你的版本覆盖吗？`);
+      if (remoteCount !== snapshotLen) {
+        const go = await showConflictModal(remoteCount, snapshotLen);
         if (!go) {
           toast('已取消发布', 'error');
+          btn.textContent = '🚀 发布到线上';
+          btn.disabled = false;
           return;
         }
       }
     }
 
     btn.textContent = '发布中…';
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(devices, null, 2))));
+    const content = btoa(unescape(encodeURIComponent(snapshot)));
     const putRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
       method: 'PUT',
       headers: { 'Authorization': `token ${ghToken}`, 'Content-Type': 'application/json' },
@@ -1765,6 +1803,25 @@ function deleteFault(id) {
   saveFaults();
   renderFaults();
   toast('已删除', 'error');
+}
+
+// ========== 冲突确认弹窗 ==========
+let _resolveConflict = null;
+
+function showConflictModal(remote, local) {
+  document.getElementById('conflictRemote').textContent = remote;
+  document.getElementById('conflictLocal').textContent = local;
+  const diff = local - remote;
+  document.getElementById('conflictMsg').innerHTML =
+    `线上数据与你本地数据<b style="color:#b45309">条数不一致</b>，可能有其他人在你之后做过修改。<br><br>` +
+    `本地比线上 <b style="color:${diff>0?'#16a34a':'#dc2626'}">${diff>0?'+':''}${diff} 条</b>，确定要用本地版本覆盖线上吗？`;
+  openModal('conflictModal');
+  return new Promise(resolve => { _resolveConflict = resolve; });
+}
+
+function resolveConflict(confirmed) {
+  closeModal('conflictModal');
+  if (_resolveConflict) { _resolveConflict(confirmed); _resolveConflict = null; }
 }
 
 // ========== 字段中文标签（历史用）==========
