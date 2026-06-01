@@ -253,6 +253,195 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+  /* ===== 统计看板 ===== */
+  .stats-wrap { flex:1; overflow:auto; padding:20px 24px; }
+  .stats-header { margin-bottom:18px; opacity:0; animation:statsHeaderIn .4s ease .05s both; }
+  .stats-header h2 { font-size:16px; font-weight:700; color:#1e293b; margin-bottom:3px; }
+  .stats-header p { font-size:12px; color:#94a3b8; }
+  .stats-summary { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:12px; margin-bottom:20px; }
+
+  @keyframes statsHeaderIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes statCardIn { from { opacity:0; transform:translateY(20px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+  @keyframes chartCardIn { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes shimmer { 0%,100% { opacity:.6; } 50% { opacity:1; } }
+
+  .stat-card {
+    background:#fff; border-radius:12px; padding:20px 20px 16px;
+    box-shadow:0 1px 3px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.04);
+    border:1.5px solid #f1f5f9; cursor:pointer;
+    transition:transform .2s cubic-bezier(.4,0,.2,1), box-shadow .2s, border-color .2s;
+    position:relative; overflow:hidden;
+    opacity:0; animation:statCardIn .45s cubic-bezier(.34,1.3,.64,1) both;
+  }
+  .stat-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    transform:scaleX(0); transform-origin:left;
+    transition:transform .5s cubic-bezier(.4,0,.2,1);
+  }
+  .stat-card.revealed::before { transform:scaleX(1); }
+  .stat-card:hover { transform:translateY(-3px); }
+  .stat-card-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .stat-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .stat-card-pct-chip { font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; opacity:0; transform:scale(.7); transition:opacity .3s ease, transform .3s cubic-bezier(.34,1.4,.64,1); }
+  .stat-card.revealed .stat-card-pct-chip { opacity:1; transform:scale(1); }
+  .stat-card .stat-num { font-size:34px; font-weight:800; line-height:1; margin-bottom:5px; letter-spacing:-1px; }
+  .stat-card .stat-label { font-size:12px; color:#94a3b8; font-weight:500; }
+
+  .stat-card.all::before  { background:#2563eb; }
+  .stat-card.all  { box-shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04); }
+  .stat-card.all:hover  { border-color:#bfdbfe; box-shadow:0 6px 20px rgba(37,99,235,.12); }
+  .stat-card.all .stat-dot  { background:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.15); }
+  .stat-card.all .stat-num  { color:#1e293b; }
+  .stat-card.all .stat-card-pct-chip  { background:#eff6ff; color:#2563eb; }
+
+  .stat-card.ok::before   { background:#16a34a; }
+  .stat-card.ok:hover   { border-color:#bbf7d0; box-shadow:0 6px 20px rgba(22,163,74,.1); }
+  .stat-card.ok .stat-dot   { background:#16a34a; box-shadow:0 0 0 3px rgba(22,163,74,.15); animation:pulse 2s infinite; }
+  .stat-card.ok .stat-num   { color:#15803d; }
+  .stat-card.ok .stat-card-pct-chip   { background:#dcfce7; color:#15803d; }
+
+  .stat-card.err::before  { background:#dc2626; }
+  .stat-card.err:hover  { border-color:#fecaca; box-shadow:0 6px 20px rgba(220,38,38,.1); }
+  .stat-card.err .stat-dot  { background:#dc2626; box-shadow:0 0 0 3px rgba(220,38,38,.15); }
+  .stat-card.err .stat-num  { color:#b91c1c; }
+  .stat-card.err .stat-card-pct-chip  { background:#fee2e2; color:#b91c1c; }
+
+  .stat-card.warn::before { background:#d97706; }
+  .stat-card.warn:hover { border-color:#fde68a; box-shadow:0 6px 20px rgba(217,119,6,.1); }
+  .stat-card.warn .stat-dot { background:#d97706; box-shadow:0 0 0 3px rgba(217,119,6,.15); }
+  .stat-card.warn .stat-num { color:#b45309; }
+  .stat-card.warn .stat-card-pct-chip { background:#fef9c3; color:#b45309; }
+
+  .stat-card.off::before  { background:#94a3b8; }
+  .stat-card.off:hover  { border-color:#cbd5e1; box-shadow:0 6px 20px rgba(100,116,139,.08); }
+  .stat-card.off .stat-dot  { background:#94a3b8; }
+  .stat-card.off .stat-num  { color:#475569; }
+  .stat-card.off .stat-card-pct-chip  { background:#f1f5f9; color:#64748b; }
+
+  .stats-charts { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .chart-card { background:#fff; border-radius:14px; padding:22px 24px; box-shadow:0 2px 16px rgba(0,0,0,.07); border:1px solid #f1f5f9; opacity:0; animation:chartCardIn .5s cubic-bezier(.4,0,.2,1) both; }
+  .chart-title { font-size:13px; font-weight:700; color:#1e293b; margin-bottom:18px; display:flex; align-items:center; gap:7px; }
+  .chart-title-icon { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+  .chart-bar-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:12px; }
+  .chart-bar-label { width:95px; color:#374151; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; font-weight:500; font-size:12px; }
+  .chart-bar-track { flex:1; background:#f1f5f9; border-radius:20px; height:18px; overflow:hidden; position:relative; }
+  .chart-bar-fill { height:100%; border-radius:20px; transition:width .7s cubic-bezier(.4,0,.2,1); display:flex; align-items:center; justify-content:flex-end; padding-right:8px; }
+  .chart-bar-pct { font-size:10px; font-weight:700; color:rgba(255,255,255,.9); white-space:nowrap; }
+  .chart-bar-count { min-width:32px; color:#6b7280; font-weight:700; font-size:12px; text-align:right; }
+
+  /* ===== 批量操作浮动栏 ===== */
+  .batch-bar { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); z-index:800; background:#1e293b; color:#fff; border-radius:14px; padding:10px 16px; display:flex; align-items:center; gap:10px; box-shadow:0 8px 32px rgba(0,0,0,.3); transition:transform .3s cubic-bezier(.34,1.4,.64,1); white-space:nowrap; }
+  .batch-bar.show { transform:translateX(-50%) translateY(0); }
+  .batch-bar-count { font-size:13px; font-weight:600; }
+  .batch-bar-div { width:1px; height:20px; background:rgba(255,255,255,.2); flex-shrink:0; }
+  .batch-status-sel { padding:5px 8px; border-radius:6px; border:none; background:rgba(255,255,255,.15); color:#fff; font-size:12px; outline:none; cursor:pointer; }
+  .batch-status-sel option { background:#1e293b; color:#fff; }
+
+  /* ===== 设备历史 ===== */
+  .history-timeline { padding:4px 0; }
+  .history-item { display:flex; gap:12px; padding:10px 0; border-bottom:1px solid #f1f5f9; }
+  .history-item:last-child { border-bottom:none; }
+  .history-dot { width:10px; height:10px; border-radius:50%; background:#3b82f6; margin-top:4px; flex-shrink:0; }
+  .history-dot.create { background:#22c55e; }
+  .history-time { font-size:11px; color:#94a3b8; white-space:nowrap; min-width:130px; font-family:monospace; }
+  .history-changes { flex:1; }
+  .history-action { font-size:12px; font-weight:600; color:#1e293b; margin-bottom:4px; }
+  .history-change-row { font-size:11px; color:#64748b; line-height:1.7; }
+  .history-old { color:#ef4444; text-decoration:line-through; }
+  .history-new { color:#22c55e; }
+
+  /* ===== 导入差异对比 ===== */
+  .diff-row { font-size:11px; padding:3px 10px; border-radius:6px; margin-bottom:3px; font-family:monospace; }
+  .diff-row.add { background:#dcfce7; color:#15803d; }
+  .diff-row.mod { background:#fef9c3; color:#a16207; }
+  .diff-row.del { background:#fee2e2; color:#b91c1c; }
+
+  /* ===== 暗色模式 ===== */
+  body.dark { background:#0f172a; color:#e2e8f0; }
+  body.dark .toolbar, body.dark .tabs { background:#1e293b; border-color:#334155; }
+  body.dark .tab { color:#64748b; }
+  body.dark .tab.active { color:#93c5fd; border-bottom-color:#3b82f6; }
+  body.dark .tab.active::after { background:#3b82f6; }
+  body.dark table { background:#1e293b; }
+  body.dark thead tr { background:linear-gradient(135deg,#0f172a,#1e3a5f); }
+  body.dark tbody tr { border-color:#334155; }
+  body.dark tbody tr:hover { background:linear-gradient(90deg,#1e293b,#1e3358); box-shadow:none; }
+  body.dark tbody td { color:#e2e8f0; }
+  body.dark .modal, body.dark .confirm-modal { background:#1e293b; color:#e2e8f0; }
+  body.dark .modal-header { background:linear-gradient(135deg,#1e293b,#0f172a); border-color:#334155; }
+  body.dark .modal-footer { background:#162032; border-color:#334155; }
+  body.dark .modal-close { background:#334155; color:#94a3b8; }
+  body.dark .modal-close:hover { background:#450a0a; color:#ef4444; }
+  body.dark .form-group label { color:#94a3b8; }
+  body.dark .form-group input, body.dark .form-group select, body.dark .form-group textarea { background:#0f172a; border-color:#334155; color:#e2e8f0; }
+  body.dark .search-wrap input { background:#1e293b; border-color:#334155; color:#e2e8f0; }
+  body.dark .stat-card, body.dark .chart-card { background:#1e293b; border-color:#334155; }
+  body.dark .stat-card .stat-num { color:#e2e8f0 !important; }
+  body.dark .stat-card .stat-label { color:#64748b; }
+  body.dark .stat-card.ok .stat-num { color:#4ade80 !important; }
+  body.dark .stat-card.err .stat-num { color:#f87171 !important; }
+  body.dark .stat-card.warn .stat-num { color:#fbbf24 !important; }
+  body.dark .stat-card.all .stat-card-pct-chip { background:#1e3a5f; color:#93c5fd; }
+  body.dark .stat-card.ok .stat-card-pct-chip { background:#14532d; color:#4ade80; }
+  body.dark .stat-card.err .stat-card-pct-chip { background:#450a0a; color:#f87171; }
+  body.dark .stat-card.warn .stat-card-pct-chip { background:#451a03; color:#fbbf24; }
+  body.dark .stat-card.off .stat-card-pct-chip { background:#1e293b; color:#94a3b8; }
+  body.dark .chart-bar-track { background:#334155; }
+  body.dark .chart-title { color:#e2e8f0; }
+  body.dark .chart-bar-label { color:#94a3b8; }
+  body.dark .log-list { background:#1e293b; }
+  body.dark .log-item { border-color:#334155; }
+  body.dark .log-item:hover { background:#0f172a; }
+  body.dark .custom-select-btn { background:#1e293b; border-color:#334155; color:#e2e8f0; }
+  body.dark .custom-select-dropdown { background:#1e293b; border-color:#334155; }
+  body.dark .custom-select-option { color:#e2e8f0; border-color:#334155; }
+  body.dark .custom-select-option:hover { background:#1e3358; color:#93c5fd; padding-left:18px; }
+  body.dark .custom-select-option.selected { background:#1e3a5f; color:#93c5fd; }
+  body.dark .fault-card { background:#1e293b; border-color:#334155; }
+  body.dark .fault-card-header { border-color:#334155; }
+  body.dark .fault-card-footer { background:#162032; border-color:#334155; }
+  body.dark .fault-title { color:#e2e8f0; }
+  body.dark .fault-steps li { color:#94a3b8; }
+  body.dark .fault-search input { background:#1e293b; border-color:#334155; color:#e2e8f0; }
+  body.dark .count-badge { background:linear-gradient(135deg,#1e3358,#1e293b); color:#93c5fd; border-color:#334155; }
+  body.dark .import-area { background:#0f172a; border-color:#334155; color:#94a3b8; }
+  body.dark .import-area:hover { background:#1e3358; }
+  body.dark .history-item { border-color:#334155; }
+  body.dark .history-action { color:#e2e8f0; }
+  body.dark .history-change-row { color:#94a3b8; }
+  body.dark .stats-wrap { background:transparent; }
+  body.dark .stats-header h2 { color:#e2e8f0; }
+  body.dark .chart-title { color:#e2e8f0; }
+  body.dark .chart-bar-label { color:#94a3b8; }
+  body.dark .chart-bar-count { color:#64748b; }
+  body.dark .chart-bar-track { background:#334155; }
+
+  /* ===== 移动端 ===== */
+  @media(max-width:768px){
+    .topbar { padding:0 12px; height:50px; }
+    .topbar h1 { font-size:13px; }
+    .btn { padding:5px 10px; font-size:11px; }
+    .toolbar { padding:8px 12px; gap:6px; }
+    .search-wrap { min-width:140px; }
+    .custom-select-btn { min-width:80px; font-size:11px; padding:6px 8px; }
+    .table-wrap { padding:8px 12px; }
+    .tabs { padding:0 8px; gap:0; overflow-x:auto; }
+    .tab { padding:10px 12px; font-size:12px; white-space:nowrap; }
+    .stats-summary { grid-template-columns:repeat(2,1fr); gap:10px; }
+    .stat-card { padding:14px; }
+    .stat-card .stat-num { font-size:24px; }
+    .stats-charts { grid-template-columns:1fr; }
+    .fault-grid { grid-template-columns:1fr; }
+    .modal { width:95vw !important; }
+    .confirm-modal { width:90vw !important; padding:20px; }
+    .form-grid { grid-template-columns:1fr; }
+    .fault-wrap, .log-wrap { padding:8px 12px; }
+    .stats-wrap { padding:8px 12px; }
+    .batch-bar { width:calc(100% - 24px); border-radius:10px; flex-wrap:wrap; justify-content:center; }
+    .topbar-right { gap:4px; }
+    .topbar-right .btn span { display:none; }
+  }
 </style>
 </head>
 <body>
@@ -272,12 +461,14 @@
       <button class="btn btn-ghost" onclick="exportExcel()">📤 导出 Excel</button>
       <button class="btn btn-ghost" onclick="unlockEdit()" style="background:rgba(255,255,255,.25)">🔒 编辑模式</button>
     </div>
+    <button class="btn btn-ghost" id="btnDark" onclick="toggleDark()" title="切换暗色模式" style="font-size:16px;padding:5px 9px;min-width:34px">🌙</button>
   </div>
 </div>
 
 <!-- Tab -->
 <div class="tabs">
   <div class="tab active" id="tab-devices" onclick="switchTab('devices')">🖥 设备列表</div>
+  <div class="tab" id="tab-stats" onclick="switchTab('stats')">📊 统计</div>
   <div class="tab" id="tab-ping" onclick="switchTab('ping')">📡 Ping 检测</div>
   <div class="tab" id="tab-fault" onclick="switchTab('fault')">🔧 常见故障</div>
   <div class="tab" id="tab-log" onclick="switchTab('log')">📋 操作日志</div>
@@ -358,6 +549,7 @@
   <table>
     <thead>
       <tr>
+        <th id="th-checkbox" style="display:none;width:36px;text-align:center"><input type="checkbox" id="checkAll" onchange="toggleSelectAll(this)" style="cursor:pointer;width:14px;height:14px"></th>
         <th>机房编号</th>
         <th>设备类型</th>
         <th>负责人</th>
@@ -383,6 +575,11 @@
     <div class="empty-icon">📭</div>
     <div>没有找到匹配的设备</div>
   </div>
+</div>
+
+<!-- 统计看板面板 -->
+<div id="panel-stats" class="stats-wrap" style="display:none">
+  <div id="statsPanel"></div>
 </div>
 
 <!-- Ping 检测面板 -->
@@ -617,6 +814,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" style="background:#f3f4f6;color:#374151" onclick="closeModal('importModal')">取消</button>
+      <button class="btn" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe" onclick="showImportDiff()" id="btnDiff" disabled>🔍 差异预览</button>
       <button class="btn btn-warning" onclick="doImport(false)" id="btnImportAppend" disabled>追加导入</button>
       <button class="btn btn-primary" onclick="doImport(true)" id="btnImportOverwrite" disabled>覆盖导入</button>
     </div>
@@ -654,6 +852,59 @@
     <div class="confirm-btns">
       <button class="btn btn-ghost" style="background:#f3f4f6;color:#374151;flex:1" onclick="closeModal('passwordModal')">取消</button>
       <button class="btn btn-primary" style="flex:1" onclick="confirmPassword()">🔓 解锁</button>
+    </div>
+  </div>
+</div>
+
+<!-- 批量操作浮动栏 -->
+<div class="batch-bar" id="batchBar">
+  <span class="batch-bar-count" id="batchCount">已选 0 台</span>
+  <div class="batch-bar-div"></div>
+  <select class="batch-status-sel" id="batchStatusSel">
+    <option value="">修改状态…</option>
+    <option>正常运行</option>
+    <option>故障中</option>
+    <option>维修中</option>
+    <option>闲置</option>
+    <option>已下线</option>
+  </select>
+  <button class="btn btn-warning btn-sm" onclick="batchChangeStatus()">应用</button>
+  <div class="batch-bar-div"></div>
+  <button class="btn btn-danger btn-sm" onclick="batchDelete()">删除</button>
+  <div class="batch-bar-div"></div>
+  <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.2)" onclick="clearSelection()">取消</button>
+</div>
+
+<!-- 设备历史弹窗 -->
+<div class="modal-overlay" id="historyModal">
+  <div class="modal" style="width:560px">
+    <div class="modal-header">
+      <h2 id="historyTitle">变更历史</h2>
+      <button class="modal-close" onclick="closeModal('historyModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="history-timeline" id="historyTimeline"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" style="background:#f1f5f9;color:#374151" onclick="closeModal('historyModal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 导入差异对比弹窗 -->
+<div class="modal-overlay" id="diffModal">
+  <div class="modal" style="width:560px">
+    <div class="modal-header">
+      <h2>导入数据差异预览</h2>
+      <button class="modal-close" onclick="closeModal('diffModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="diffContent"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" style="background:#f1f5f9;color:#374151" onclick="closeModal('diffModal')">关闭</button>
+      <button class="btn btn-warning" onclick="closeModal('diffModal');doImport(false)">追加导入</button>
+      <button class="btn btn-primary" onclick="closeModal('diffModal');doImport(true)">覆盖导入</button>
     </div>
   </div>
 </div>
@@ -864,8 +1115,13 @@ function renderTable() {
   }
   document.getElementById('emptyState').style.display = 'none';
 
+  // 复选框列显示/隐藏
+  const thCb = document.getElementById('th-checkbox');
+  if (thCb) thCb.style.display = isEditMode ? '' : 'none';
+
   tbody.innerHTML = list.map(d => `
     <tr>
+      ${isEditMode ? `<td style="text-align:center;padding:0 8px"><input type="checkbox" class="row-check" data-id="${d.id}" ${selectedIds.has(d.id)?'checked':''} onchange="toggleSelectRow(this)" style="cursor:pointer;width:14px;height:14px"></td>` : ''}
       <td><b>${d.roomNo||''}</b></td>
       <td>${d.type||''}</td>
       <td><b style="color:#1a3a6b">${d.owner||''}</b></td>
@@ -884,8 +1140,9 @@ function renderTable() {
       <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.remark||''}">${d.remark||''}</td>
       <td>
         <div class="td-actions">
+          <button class="btn btn-sm" style="background:#f1f5f9;color:#374151" onclick="openHistory('${d.id}')">历史</button>
           ${isEditMode ? `<button class="btn btn-warning btn-sm" onclick="openEdit('${d.id}')">编辑</button>
-          <button class="btn btn-danger btn-sm" onclick="openDelete('${d.id}')">删除</button>` : '—'}
+          <button class="btn btn-danger btn-sm" onclick="openDelete('${d.id}')">删除</button>` : ''}
         </div>
       </td>
     </tr>
@@ -945,8 +1202,24 @@ function saveDevice() {
   if (!d.owner && !d.ip && !d.roomNo) { toast('请至少填写负责人、IP 或机房编号', 'error'); return; }
   if (editingId) {
     const idx = devices.findIndex(x => x.id === editingId);
-    if (idx >= 0) devices[idx] = d;
+    if (idx >= 0) {
+      const old = devices[idx];
+      d.history = old.history || [];
+      // 计算变更字段
+      const diff = [];
+      FIELDS.forEach(field => {
+        if ((d[field]||'') !== (old[field]||'')) {
+          diff.push({ field: FIELD_LABELS[field]||field, old: old[field]||'', new: d[field]||'' });
+        }
+      });
+      if (diff.length > 0) {
+        d.history.unshift({ time: new Date().toLocaleString('zh-CN'), action: 'edit', changes: diff });
+        if (d.history.length > 50) d.history = d.history.slice(0, 50);
+      }
+      devices[idx] = d;
+    }
   } else {
+    d.history = [{ time: new Date().toLocaleString('zh-CN'), action: 'create', changes: [] }];
     devices.push(d);
   }
   addLog(editingId ? 'edit' : 'add', `${editingId ? '编辑' : '新增'}设备：${d.roomNo || d.ip || '未命名'}`);
@@ -1033,6 +1306,7 @@ function handleImportFile(input) {
       document.getElementById('importPreview').innerHTML = `<span style="color:#22c55e">✓</span> 解析完成，共 <b>${importData.length}</b> 条记录`;
       document.getElementById('btnImportAppend').disabled = false;
       document.getElementById('btnImportOverwrite').disabled = false;
+      document.getElementById('btnDiff').disabled = false;
     } catch(err) {
       toast('文件解析失败：' + err.message, 'error');
     }
@@ -1174,7 +1448,7 @@ async function publishData() {
 let currentTab = 'devices';
 function switchTab(tab) {
   currentTab = tab;
-  ['devices','ping','fault','log'].forEach(t => {
+  ['devices','stats','ping','fault','log'].forEach(t => {
     document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
     const p = document.getElementById(`panel-${t}`);
     if (p) p.style.display = t === tab ? '' : 'none';
@@ -1183,6 +1457,7 @@ function switchTab(tab) {
   if (tab === 'log')   renderLog();
   if (tab === 'ping')  renderPingTable();
   if (tab === 'fault') renderFaults();
+  if (tab === 'stats') renderStats();
 }
 
 // ========== 操作日志 ==========
@@ -1492,12 +1767,334 @@ function deleteFault(id) {
   toast('已删除', 'error');
 }
 
+// ========== 字段中文标签（历史用）==========
+const FIELD_LABELS = {
+  roomNo:'机房编号', type:'设备类型', owner:'负责人', assetOwner:'资产挂名',
+  ip:'IP地址', mac:'MAC地址', assetNo:'资产编号', serial:'序列号',
+  dept:'所属部门', biz:'业务类型', location:'存放位置', os:'操作系统',
+  idle:'空闲时间', ipBound:'IP绑定', status:'状态', func:'功能描述',
+  notice:'注意事项', remark:'备注'
+};
+
+// ========== 暗色模式 ==========
+let darkMode = localStorage.getItem('darkMode') === '1';
+function applyDark() {
+  document.body.classList.toggle('dark', darkMode);
+  const btn = document.getElementById('btnDark');
+  if (btn) btn.textContent = darkMode ? '☀️' : '🌙';
+}
+function toggleDark() {
+  darkMode = !darkMode;
+  localStorage.setItem('darkMode', darkMode ? '1' : '0');
+  applyDark();
+}
+
+// ========== 统计看板 ==========
+function renderStats() {
+  const total = devices.length;
+  if (total === 0) {
+    document.getElementById('statsPanel').innerHTML = '<div style="text-align:center;padding:80px;color:#94a3b8">暂无设备数据</div>';
+    return;
+  }
+  const byStatus = {}, byType = {}, byRoom = {};
+  devices.forEach(d => {
+    const s = d.status || '未知';
+    byStatus[s] = (byStatus[s]||0) + 1;
+    const t = d.type || '未知';
+    byType[t] = (byType[t]||0) + 1;
+    const m = (d.location||'').match(/^(.+?机房)/);
+    const room = m ? m[1] : '其他';
+    byRoom[room] = (byRoom[room]||0) + 1;
+  });
+  const ok   = byStatus['正常运行'] || 0;
+  const err  = byStatus['故障中'] || 0;
+  const warn = byStatus['维修中'] || 0;
+  const off  = (byStatus['闲置']||0) + (byStatus['已下线']||0);
+  const healthPct = total ? Math.round(ok/total*100) : 0;
+
+  const mkCard = (cls, num, label, pct, onclick, delay) => `
+    <div class="stat-card ${cls}" onclick="${onclick}" style="animation-delay:${delay}s">
+      <div class="stat-card-top">
+        <div class="stat-dot"></div>
+        <div class="stat-card-pct-chip">${pct}%</div>
+      </div>
+      <div class="stat-num" data-n="${num}">0</div>
+      <div class="stat-label">${label}</div>
+    </div>`;
+
+  document.getElementById('statsPanel').innerHTML = `
+    <div class="stats-header">
+      <h2>设备概览</h2>
+      <p>共 ${total} 台设备 &nbsp;·&nbsp; 健康率 <b style="color:#15803d">${healthPct}%</b> &nbsp;·&nbsp; 点击卡片可快速筛选</p>
+    </div>
+    <div class="stats-summary">
+      ${mkCard('all', total, '全部设备', 100,                              'clearFiltersAndGo()',          .08)}
+      ${mkCard('ok',  ok,   '正常运行', total?Math.round(ok/total*100):0,  "filterByStatus('正常运行')",  .16)}
+      ${mkCard('err', err,  '故障中',   total?Math.round(err/total*100):0,  "filterByStatus('故障中')",   .24)}
+      ${mkCard('warn',warn, '维修中',   total?Math.round(warn/total*100):0, "filterByStatus('维修中')",   .32)}
+      ${mkCard('off', off,  '闲置/下线',total?Math.round(off/total*100):0, "filterByStatus('闲置')",      .40)}
+    </div>
+    <div class="stats-charts">
+      <div class="chart-card" style="animation-delay:.5s">
+        <div class="chart-title">
+          <div class="chart-title-icon" style="background:#eff6ff">💻</div>设备类型分布
+        </div>
+        ${renderBarChart(byType, total, [
+          'linear-gradient(90deg,#3b82f6,#6366f1)',
+          'linear-gradient(90deg,#8b5cf6,#a855f7)',
+          'linear-gradient(90deg,#06b6d4,#0891b2)',
+          'linear-gradient(90deg,#f59e0b,#f97316)',
+          'linear-gradient(90deg,#ec4899,#f43f5e)',
+          'linear-gradient(90deg,#22c55e,#16a34a)',
+          'linear-gradient(90deg,#64748b,#475569)'
+        ])}
+      </div>
+      <div class="chart-card" style="animation-delay:.6s">
+        <div class="chart-title">
+          <div class="chart-title-icon" style="background:#f0fdf4">🏢</div>机房分布
+        </div>
+        ${renderBarChart(byRoom, total, [
+          'linear-gradient(90deg,#2563eb,#1d4ed8)',
+          'linear-gradient(90deg,#0891b2,#0e7490)',
+          'linear-gradient(90deg,#0d9488,#0f766e)',
+          'linear-gradient(90deg,#16a34a,#15803d)',
+          'linear-gradient(90deg,#ca8a04,#b45309)'
+        ])}
+      </div>
+      <div class="chart-card" style="animation-delay:.7s;grid-column:1/-1">
+        <div class="chart-title">
+          <div class="chart-title-icon" style="background:#fef9c3">📊</div>状态分布
+        </div>
+        ${renderBarChart(byStatus, total, [
+          'linear-gradient(90deg,#22c55e,#16a34a)',
+          'linear-gradient(90deg,#ef4444,#dc2626)',
+          'linear-gradient(90deg,#f59e0b,#d97706)',
+          'linear-gradient(90deg,#94a3b8,#64748b)',
+          'linear-gradient(90deg,#cbd5e1,#94a3b8)'
+        ])}
+      </div>
+    </div>
+  `;
+
+  // 触发动画：柱状图生长 + 数字滚动 + 顶部色条展开
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    // 柱状图从0生长到实际宽度
+    document.querySelectorAll('.chart-bar-fill[data-w]').forEach(el => {
+      el.style.width = el.dataset.w + '%';
+      const pctEl = el.querySelector('.chart-bar-pct');
+      if (pctEl) pctEl.style.opacity = '1';
+    });
+    // 卡片顶部色条展开 + 百分比 chip 弹出
+    document.querySelectorAll('.stat-card').forEach((el, i) => {
+      setTimeout(() => {
+        el.classList.add('revealed');
+        // 数字滚动
+        const numEl = el.querySelector('.stat-num[data-n]');
+        if (numEl) countUp(numEl, parseInt(numEl.dataset.n), 700);
+      }, 80 + i * 80);
+    });
+  }));
+}
+
+function renderBarChart(data, total, gradients) {
+  const sorted = Object.entries(data).sort((a,b) => b[1]-a[1]);
+  return sorted.map(([label, count], i) => {
+    const pct = total ? Math.round(count/total*100) : 0;
+    const grad = (gradients||[])[i % ((gradients||[]).length||1)] || 'linear-gradient(90deg,#3b82f6,#6366f1)';
+    return `
+    <div class="chart-bar-row">
+      <div class="chart-bar-label" title="${label}">${label}</div>
+      <div class="chart-bar-track">
+        <div class="chart-bar-fill" data-w="${pct}" style="width:0%;background:${grad};transition:width .8s cubic-bezier(.4,0,.2,1) ${i*0.06}s;min-width:0">
+          <span class="chart-bar-pct" style="opacity:0;transition:opacity .3s ease ${i*0.06+.5}s">${pct >= 8 ? pct+'%' : ''}</span>
+        </div>
+      </div>
+      <div class="chart-bar-count">${count}</div>
+    </div>`;
+  }).join('');
+}
+
+function countUp(el, target, duration) {
+  if (!target) return;
+  const start = performance.now();
+  const tick = (now) => {
+    const p = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(eased * target);
+    if (p < 1) requestAnimationFrame(tick);
+    else el.textContent = target;
+  };
+  requestAnimationFrame(tick);
+}
+
+function clearFiltersAndGo() {
+  selectOption('cs-status','','全部状态');
+  switchTab('devices');
+}
+function filterByStatus(status) {
+  selectOption('cs-status', status, status);
+  switchTab('devices');
+}
+
+// ========== 批量操作 ==========
+let selectedIds = new Set();
+
+function toggleSelectAll(cb) {
+  const checks = document.querySelectorAll('.row-check');
+  checks.forEach(c => {
+    c.checked = cb.checked;
+    if (cb.checked) selectedIds.add(c.dataset.id);
+    else selectedIds.delete(c.dataset.id);
+  });
+  updateBatchBar();
+}
+
+function toggleSelectRow(cb) {
+  if (cb.checked) selectedIds.add(cb.dataset.id);
+  else selectedIds.delete(cb.dataset.id);
+  const all = document.querySelectorAll('.row-check');
+  const checked = document.querySelectorAll('.row-check:checked');
+  const ca = document.getElementById('checkAll');
+  if (ca) {
+    ca.indeterminate = checked.length > 0 && checked.length < all.length;
+    ca.checked = all.length > 0 && checked.length === all.length;
+  }
+  updateBatchBar();
+}
+
+function updateBatchBar() {
+  const bar = document.getElementById('batchBar');
+  const count = selectedIds.size;
+  if (count > 0 && isEditMode) {
+    bar.classList.add('show');
+    document.getElementById('batchCount').textContent = `已选 ${count} 台`;
+  } else {
+    bar.classList.remove('show');
+  }
+}
+
+function batchChangeStatus() {
+  if (selectedIds.size === 0) return;
+  const s = document.getElementById('batchStatusSel').value;
+  if (!s) { toast('请先选择要修改的状态', 'error'); return; }
+  const count = selectedIds.size;
+  selectedIds.forEach(id => {
+    const d = devices.find(x => x.id === id);
+    if (d) {
+      // 记录历史
+      if (!d.history) d.history = [];
+      if (d.status !== s) {
+        d.history.unshift({ time: new Date().toLocaleString('zh-CN'), action: 'edit', changes: [{ field:'状态', old: d.status||'', new: s }] });
+        if (d.history.length > 50) d.history = d.history.slice(0, 50);
+      }
+      d.status = s;
+    }
+  });
+  addLog('edit', `批量修改 ${count} 台设备状态为「${s}」`);
+  saveData();
+  document.getElementById('batchStatusSel').value = '';
+  selectedIds.clear();
+  updateBatchBar();
+  renderTable();
+  toast(`已将 ${count} 台设备状态改为「${s}」`);
+}
+
+function batchDelete() {
+  if (selectedIds.size === 0) return;
+  const count = selectedIds.size;
+  if (!confirm(`确定删除选中的 ${count} 台设备？此操作不可撤销！`)) return;
+  addLog('delete', `批量删除 ${count} 台设备`);
+  devices = devices.filter(d => !selectedIds.has(d.id));
+  selectedIds.clear();
+  saveData();
+  updateBatchBar();
+  renderTable();
+  renderPingTable();
+  updateFilterOptions();
+  toast(`已删除 ${count} 台设备`, 'error');
+}
+
+function clearSelection() {
+  selectedIds.clear();
+  document.querySelectorAll('.row-check').forEach(c => c.checked = false);
+  const ca = document.getElementById('checkAll');
+  if (ca) { ca.checked = false; ca.indeterminate = false; }
+  updateBatchBar();
+}
+
+// ========== 设备变更历史 ==========
+function openHistory(id) {
+  const d = devices.find(x => x.id === id);
+  if (!d) return;
+  const history = d.history || [];
+  document.getElementById('historyTitle').textContent = `变更历史 — ${d.roomNo || d.ip || '未命名'}`;
+  const timeline = document.getElementById('historyTimeline');
+  if (history.length === 0) {
+    timeline.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;font-size:13px">暂无变更记录<br><span style="font-size:12px;color:#cbd5e1">编辑设备后会自动记录变更</span></div>';
+  } else {
+    timeline.innerHTML = history.map(h => `
+      <div class="history-item">
+        <div class="history-dot ${h.action}"></div>
+        <div class="history-time">${h.time}</div>
+        <div class="history-changes">
+          <div class="history-action">${h.action === 'edit' ? '修改' : h.action === 'create' ? '创建' : '操作'}</div>
+          ${h.changes.length === 0 ? '<div class="history-change-row" style="color:#94a3b8">（新增设备）</div>' :
+            h.changes.map(c => `
+              <div class="history-change-row">${c.field}：<span class="history-old">${c.old || '(空)'}</span> → <span class="history-new">${c.new || '(空)'}</span></div>
+            `).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+  openModal('historyModal');
+}
+
+// ========== 导入差异对比 ==========
+function showImportDiff() {
+  if (!importData) return;
+  const newMap = {}, oldMap = {};
+  importData.forEach(d => { const k = d.ip || d.assetNo || d.roomNo; if (k) newMap[k] = d; });
+  devices.forEach(d => { const k = d.ip || d.assetNo || d.roomNo; if (k) oldMap[k] = d; });
+
+  const added     = importData.filter(d => { const k = d.ip||d.assetNo||d.roomNo; return k && !oldMap[k]; });
+  const modified  = importData.filter(d => {
+    const k = d.ip||d.assetNo||d.roomNo;
+    if (!k || !oldMap[k]) return false;
+    return FIELDS.some(f => (d[f]||'') !== (oldMap[k][f]||''));
+  });
+  const unchanged = importData.filter(d => {
+    const k = d.ip||d.assetNo||d.roomNo;
+    if (!k || !oldMap[k]) return false;
+    return FIELDS.every(f => (d[f]||'') === (oldMap[k][f]||''));
+  });
+  const removed = devices.filter(d => { const k = d.ip||d.assetNo||d.roomNo; return k && !newMap[k]; });
+
+  let html = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;font-size:12px">
+    <div style="background:#dcfce7;color:#15803d;padding:12px;border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:800">${added.length}</div>新增</div>
+    <div style="background:#fef9c3;color:#a16207;padding:12px;border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:800">${modified.length}</div>修改</div>
+    <div style="background:#fee2e2;color:#b91c1c;padding:12px;border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:800">${removed.length}</div>删除(覆盖)</div>
+    <div style="background:#f8fafc;color:#6b7280;padding:12px;border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:800">${unchanged.length}</div>无变化</div>
+  </div>`;
+
+  const renderRows = (list, cls) => list.slice(0,6).map(d =>
+    `<div class="diff-row ${cls}">${d.roomNo||''} ${d.ip||''} ${d.owner||''}</div>`
+  ).join('') + (list.length > 6 ? `<div style="font-size:11px;color:#94a3b8;padding:2px 10px">...还有 ${list.length-6} 条</div>` : '');
+
+  if (added.length)    html += `<div style="margin-bottom:10px"><div style="font-weight:600;color:#15803d;font-size:12px;margin-bottom:4px">✅ 新增 (${added.length})</div>${renderRows(added,'add')}</div>`;
+  if (modified.length) html += `<div style="margin-bottom:10px"><div style="font-weight:600;color:#a16207;font-size:12px;margin-bottom:4px">📝 修改 (${modified.length})</div>${renderRows(modified,'mod')}</div>`;
+  if (removed.length)  html += `<div style="margin-bottom:10px"><div style="font-weight:600;color:#b91c1c;font-size:12px;margin-bottom:4px">⚠️ 覆盖后删除 (${removed.length})</div>${renderRows(removed,'del')}</div>`;
+
+  document.getElementById('diffContent').innerHTML = html;
+  openModal('diffModal');
+}
+
 // ========== 初始化 ==========
 loadData(); // async，自动从 GitHub 同步最新数据
 loadLog();
 loadFaults();
 renderTable();
 updateFilterOptions();
+applyDark(); // 恢复暗色模式偏好
 </script>
 </body>
 </html>
