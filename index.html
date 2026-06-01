@@ -1067,25 +1067,32 @@ function setSyncStatus(msg, color='rgba(255,255,255,.6)') {
 async function fetchFromGitHub() {
   const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${GITHUB_FILE}?t=${Date.now()}`);
   if (!res.ok) throw new Error('拉取失败');
-  return await res.json();
+  const raw = await res.json();
+  // 兼容旧格式（纯数组）和新格式（{devices, faults}）
+  if (Array.isArray(raw)) return { devices: raw, faults: [] };
+  return raw;
 }
 
 async function loadData() {
   // 先用 localStorage 快速显示
   try { devices = JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch(e) { devices = []; }
+  try { faults = JSON.parse(localStorage.getItem(FAULT_KEY) || '[]'); } catch(e) { faults = []; }
   renderTable();
   setSyncStatus('⏳ 同步中…');
 
   // 再从 GitHub 拉取最新数据
   try {
     const data = await fetchFromGitHub();
-    devices = data;
+    devices = data.devices;
+    faults = data.faults || [];
     localStorage.setItem(STORE_KEY, JSON.stringify(devices));
+    localStorage.setItem(FAULT_KEY, JSON.stringify(faults));
     lastSyncTime = new Date();
     setSyncStatus(`✅ 已同步 ${formatTime(lastSyncTime)}`);
     renderTable();
     renderPingTable();
     updateFilterOptions();
+    renderFaults();
   } catch(e) {
     setSyncStatus('⚠️ 离线（使用本地缓存）', 'rgba(255,200,0,.8)');
   }
@@ -1103,13 +1110,16 @@ function formatTime(date) {
 setInterval(async () => {
   try {
     const data = await fetchFromGitHub();
-    devices = data;
+    devices = data.devices;
+    faults = data.faults || [];
     localStorage.setItem(STORE_KEY, JSON.stringify(devices));
+    localStorage.setItem(FAULT_KEY, JSON.stringify(faults));
     lastSyncTime = new Date();
     setSyncStatus(`✅ 已同步 ${formatTime(lastSyncTime)}`);
     renderTable();
     renderPingTable();
     updateFilterOptions();
+    renderFaults();
   } catch(e) {}
 }, 5 * 60 * 1000);
 
@@ -1481,17 +1491,19 @@ async function publishData() {
     const getRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
       headers: { 'Authorization': `token ${ghToken}`, 'Accept': 'application/vnd.github.v3+json' }
     });
-    // 在任何 await 之前先快照，防止等待期间自动同步覆盖 devices
-    const snapshot = JSON.stringify(devices, null, 2);
-    const snapshotLen = devices.length;
+    // 在任何 await 之前先快照，防止等待期间自动同步覆盖 devices/faults
+    const snapshotDevices = devices;
+    const snapshotFaults = faults;
+    const snapshotPayload = JSON.stringify({ devices: snapshotDevices, faults: snapshotFaults }, null, 2);
+    const snapshotLen = snapshotDevices.length;
 
     if (getRes.ok) {
       const j = await getRes.json();
       sha = j.sha;
-      // 解码远端数据，检查条数
+      // 解码远端数据，检查设备条数（兼容旧格式）
       const remoteData = JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));
-      remoteCount = remoteData.length;
-      // 如果远端比本地多（说明有人在我们之后发布了），提示用户
+      remoteCount = Array.isArray(remoteData) ? remoteData.length : (remoteData.devices || []).length;
+      // 如果远端设备数与本地不同，提示用户
       if (remoteCount !== snapshotLen) {
         const go = await showConflictModal(remoteCount, snapshotLen);
         if (!go) {
@@ -1504,7 +1516,7 @@ async function publishData() {
     }
 
     btn.textContent = '发布中…';
-    const content = btoa(unescape(encodeURIComponent(snapshot)));
+    const content = btoa(unescape(encodeURIComponent(snapshotPayload)));
     const putRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
       method: 'PUT',
       headers: { 'Authorization': `token ${ghToken}`, 'Content-Type': 'application/json' },

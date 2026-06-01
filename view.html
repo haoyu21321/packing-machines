@@ -225,7 +225,8 @@ async function loadData() {
   try {
     const res = await fetch(`https://raw.githubusercontent.com/haoyu21321/packing-machines/main/data.json?t=${Date.now()}`);
     if (!res.ok) throw new Error('数据文件不存在，请先从编辑端发布数据');
-    devices = await res.json();
+    const raw = await res.json();
+    devices = Array.isArray(raw) ? raw : (raw.devices || []);
     document.getElementById('loadingState').style.display = 'none';
     document.getElementById('mainTable').style.display = '';
     document.getElementById('updateTime').textContent = '数据已加载 · ' + new Date().toLocaleString('zh-CN');
