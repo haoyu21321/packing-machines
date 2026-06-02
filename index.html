@@ -894,7 +894,14 @@
     <div style="text-align:center;margin-bottom:16px">
       <div style="font-size:36px;margin-bottom:8px">🔐</div>
       <h3 style="font-size:16px;color:#1a3a6b">进入编辑模式</h3>
-      <p style="color:#6b7280;font-size:13px;margin-top:6px">请输入编辑密码以解锁完整功能</p>
+      <p style="color:#6b7280;font-size:13px;margin-top:6px">请填写姓名并输入编辑密码</p>
+    </div>
+    <div style="margin-bottom:12px">
+      <input type="text" id="operatorInput" placeholder="你的姓名（如：杨浩宇）"
+        style="width:100%;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;outline:none"
+        onfocus="this.style.borderColor='#3b82f6';this.style.boxShadow='0 0 0 2px rgba(59,130,246,.2)'"
+        onblur="this.style.borderColor='#d1d5db';this.style.boxShadow='none'"
+        onkeydown="if(event.key==='Enter')document.getElementById('passwordInput').focus()">
     </div>
     <div style="margin-bottom:16px">
       <input type="password" id="passwordInput" placeholder="请输入密码"
@@ -1013,23 +1020,38 @@ document.addEventListener('click', e => {
 const EDIT_PASSWORD = 'IT123456';
 let isEditMode = false;
 
+let currentOperator = localStorage.getItem('packing_operator') || '';
+
 function unlockEdit() {
   document.getElementById('passwordInput').value = '';
   document.getElementById('passwordError').style.display = 'none';
+  document.getElementById('operatorInput').value = currentOperator;
   openModal('passwordModal');
-  setTimeout(() => document.getElementById('passwordInput').focus(), 100);
+  setTimeout(() => {
+    const nameInput = document.getElementById('operatorInput');
+    nameInput.value ? document.getElementById('passwordInput').focus() : nameInput.focus();
+  }, 100);
 }
 
 function confirmPassword() {
+  const name = document.getElementById('operatorInput').value.trim();
   const input = document.getElementById('passwordInput').value;
+  if (!name) {
+    document.getElementById('operatorInput').focus();
+    document.getElementById('operatorInput').style.borderColor = '#ef4444';
+    setTimeout(() => document.getElementById('operatorInput').style.borderColor = '#d1d5db', 1500);
+    return;
+  }
   if (input === EDIT_PASSWORD) {
+    currentOperator = name;
+    localStorage.setItem('packing_operator', name);
     closeModal('passwordModal');
     isEditMode = true;
     document.getElementById('editControls').style.display = '';
     document.getElementById('lockControls').style.display = 'none';
     renderTable();
     updateFaultEditBtn();
-    toast('✅ 已进入编辑模式');
+    toast(`✅ 已进入编辑模式（${name}）`);
   } else {
     document.getElementById('passwordError').style.display = 'block';
     document.getElementById('passwordInput').value = '';
@@ -1578,7 +1600,7 @@ function saveLog() {
   localStorage.setItem(LOG_KEY, JSON.stringify(logs.slice(0, 500)));
 }
 function addLog(action, desc) {
-  logs.unshift({ time: new Date().toLocaleString('zh-CN'), action, desc });
+  logs.unshift({ time: new Date().toLocaleString('zh-CN'), action, desc, operator: currentOperator || '未知' });
   saveLog();
 }
 function clearLog() {
@@ -1600,6 +1622,7 @@ function renderLog() {
     <div class="log-item">
       <span class="log-time">${l.time}</span>
       <span class="log-action ${typeMap[l.action]||''}">${labelMap[l.action]||l.action}</span>
+      ${l.operator ? `<span style="background:#f1f5f9;color:#1a3a6b;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap">${l.operator}</span>` : ''}
       <span style="color:#374151">${l.desc}</span>
     </div>
   `).join('');
