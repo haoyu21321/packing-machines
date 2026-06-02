@@ -909,7 +909,7 @@
         onkeydown="if(event.key==='Enter')confirmPassword()"
         onfocus="this.style.borderColor='#3b82f6';this.style.boxShadow='0 0 0 2px rgba(59,130,246,.2)'"
         onblur="this.style.borderColor='#d1d5db';this.style.boxShadow='none'">
-      <div id="passwordError" style="color:#ef4444;font-size:12px;margin-top:6px;text-align:center;display:none">❌ 密码错误，请重试</div>
+      <div id="passwordError" style="color:#ef4444;font-size:12px;margin-top:6px;text-align:center;display:none"></div>
     </div>
     <div class="confirm-btns">
       <button class="btn btn-ghost" style="background:#f3f4f6;color:#374151;flex:1" onclick="closeModal('passwordModal')">取消</button>
@@ -1018,9 +1018,16 @@ document.addEventListener('click', e => {
 
 // ========== 权限控制 ==========
 const EDIT_PASSWORD = 'IT123456';
+const ALLOWED_OPERATORS = ['魏庆辉','陈振家','白淇源','杜昊潼','韩琦','李雅鑫','马百祥','强鑫','徐远楠','杨浩宇','杨晓宽','原宇飞','臧生辉'];
 let isEditMode = false;
 
 let currentOperator = localStorage.getItem('packing_operator') || '';
+
+function showPasswordError(msg) {
+  const el = document.getElementById('passwordError');
+  el.textContent = '❌ ' + msg;
+  el.style.display = 'block';
+}
 
 function unlockEdit() {
   document.getElementById('passwordInput').value = '';
@@ -1042,21 +1049,27 @@ function confirmPassword() {
     setTimeout(() => document.getElementById('operatorInput').style.borderColor = '#d1d5db', 1500);
     return;
   }
-  if (input === EDIT_PASSWORD) {
-    currentOperator = name;
-    localStorage.setItem('packing_operator', name);
-    closeModal('passwordModal');
-    isEditMode = true;
-    document.getElementById('editControls').style.display = '';
-    document.getElementById('lockControls').style.display = 'none';
-    renderTable();
-    updateFaultEditBtn();
-    toast(`✅ 已进入编辑模式（${name}）`);
-  } else {
-    document.getElementById('passwordError').style.display = 'block';
+  if (!ALLOWED_OPERATORS.includes(name)) {
+    showPasswordError('该姓名无编辑权限，请联系管理员');
+    document.getElementById('operatorInput').value = '';
+    document.getElementById('operatorInput').focus();
+    return;
+  }
+  if (input !== EDIT_PASSWORD) {
+    showPasswordError('密码错误，请重试');
     document.getElementById('passwordInput').value = '';
     document.getElementById('passwordInput').focus();
+    return;
   }
+  currentOperator = name;
+  localStorage.setItem('packing_operator', name);
+  closeModal('passwordModal');
+  isEditMode = true;
+  document.getElementById('editControls').style.display = '';
+  document.getElementById('lockControls').style.display = 'none';
+  renderTable();
+  updateFaultEditBtn();
+  toast(`✅ 已进入编辑模式（${name}）`);
 }
 
 // ========== Token 安全存储（简单混淆）==========
