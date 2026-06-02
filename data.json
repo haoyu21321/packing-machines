@@ -1741,26 +1741,6 @@
       "serial": ""
     },
     {
-      "id": "mpma0fb8jn6y",
-      "type": "MAC-mini",
-      "dept": "看云控股/斑马/产品研发/研发/课程体验/互动体验",
-      "owner": "liuyongbj02",
-      "assetOwner": "liuyongbj02",
-      "assetNo": "F101110782",
-      "ip": "10.1.20.146",
-      "mac": "14:9d:99:7d:3e:c2",
-      "roomNo": "MAC-MINI 04",
-      "ipBound": "是",
-      "idle": "凌晨 2:00 - 上午 6:00",
-      "biz": "斑马百科游戏打包机",
-      "status": "正常运行",
-      "notice": "ip地址不能变动",
-      "func": "百科游戏 APP 打包 和 CI/CD 构建，SVN服务",
-      "location": "ABD主机房",
-      "remark": "",
-      "serial": ""
-    },
-    {
       "id": "mpma0fb8zlzm",
       "type": "windows台式机",
       "dept": "看云控股/猿辅导/产品研发部/研发组/课程体验组",
@@ -1779,26 +1759,6 @@
       "location": "ABD主机房",
       "remark": "",
       "serial": "chromium-dev"
-    },
-    {
-      "id": "mpma0fb8i0bz",
-      "type": "windows台式机",
-      "dept": "看云控股/基础研发部/工程中心/直播中台/音视频引擎",
-      "owner": "pengyang",
-      "assetOwner": "pengyang",
-      "assetNo": "F101026331",
-      "ip": "10.1.21.111",
-      "mac": "40:b0:76:a4:4a:e2",
-      "roomNo": "CentOS Linux 8.5.2111 02",
-      "ipBound": "是",
-      "idle": "如需要下线提前联系",
-      "biz": "中台Linux打包+实验机",
-      "status": "正常运行",
-      "notice": "ip地址不能变动",
-      "func": "直播中台 Linux 打包/媒资批处理/音视频测试",
-      "location": "ABD主机房",
-      "remark": "",
-      "serial": "localhost.localdomain"
     },
     {
       "id": "mpma0fb8j34m",
