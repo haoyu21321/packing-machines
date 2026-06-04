@@ -2008,7 +2008,7 @@ function showSshTip(ip, deviceType) {
     modal.id = 'sshTipModal';
     modal.className = 'modal-overlay';
     document.body.appendChild(modal);
-    modal.addEventListener('click', e => { if (e.target === modal) modal.classList.add('hidden'); });
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal('sshTipModal'); });
   }
 
   // 根据设备类型决定修复方案
@@ -2106,10 +2106,10 @@ function showSshTip(ip, deviceType) {
       <div style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px">${bodyHtml}</div>
     </div>`;
 
-  modal.classList.remove('hidden');
+  openModal('sshTipModal');
 
   // 绑定关闭按钮
-  modal.querySelector('#btnSshModalClose').onclick = () => modal.classList.add('hidden');
+  modal.querySelector('#btnSshModalClose').onclick = () => closeModal('sshTipModal');
 
   // 绑定各复制按钮（用 data-key 关联命令）
   modal.querySelectorAll('[data-copy-key]').forEach(btn => {
