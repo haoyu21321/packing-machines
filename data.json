@@ -1819,6 +1819,34 @@
       "location": "E5机房2柜1层51号",
       "remark": "",
       "serial": "VT89X5996V9"
+    },
+    {
+      "id": "mpzbip9a75yf",
+      "roomNo": "测试",
+      "type": "MAC-mini",
+      "owner": "杨浩宇",
+      "assetOwner": "杨浩宇",
+      "ip": "10.1.58.240",
+      "mac": "80:a9:97:1b:8d:99",
+      "assetNo": "测试",
+      "serial": "K9JJXP5F9M",
+      "dept": "测试",
+      "biz": "测试",
+      "location": "测试",
+      "os": "测试",
+      "idle": "测试",
+      "ipBound": "是",
+      "status": "正常运行",
+      "func": "测试",
+      "notice": "测试",
+      "remark": "",
+      "history": [
+        {
+          "time": "2026/6/4 17:53:52",
+          "action": "create",
+          "changes": []
+        }
+      ]
     }
   ],
   "faults": [
