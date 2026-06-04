@@ -1983,7 +1983,7 @@ function renderPingTable() {
         <td>${d.location||''}</td>
         <td>
           <button class="btn btn-primary btn-sm" onclick="checkSingle('${d.ip}','${d.id}')" ${!d.ip?'disabled':''}>检测</button>
-          ${state==='warn' ? `<button class="btn btn-sm" style="background:#fef9c3;color:#a16207;border:1px solid #fde68a;margin-left:4px" onclick="showSshTip('${d.ip}')" title="SSH修复提示">SSH修复</button>` : ''}
+          ${state==='warn' ? `<button class="btn btn-sm" style="background:#fef9c3;color:#a16207;border:1px solid #fde68a;margin-left:4px" onclick="showSshTip('${d.ip}','${(d.type||'').replace(/'/g,'')}')" title="SSH修复提示">SSH修复</button>` : ''}
         </td>
       </tr>
     `;
@@ -1993,7 +1993,15 @@ function renderPingTable() {
 }
 
 // SSH 修复提示弹窗
-function showSshTip(ip) {
+// 临时存放当前弹窗的命令，避免 onclick 里嵌套引号冲突
+window._sshCmds = {};
+
+function showSshTip(ip, deviceType) {
+  const type = (deviceType || '').toLowerCase();
+  const isMac     = type.includes('mac');
+  const isWindows = type.includes('windows');
+  const isNas     = type.includes('nas');
+
   let modal = document.getElementById('sshTipModal');
   if (!modal) {
     modal = document.createElement('div');
@@ -2003,91 +2011,139 @@ function showSshTip(ip) {
     modal.addEventListener('click', e => { if (e.target === modal) modal.classList.add('hidden'); });
   }
 
-  const oneliner = `ssh 用户名@${ip} "sudo launchctl kickstart -k system/com.apple.screensharing"`;
+  // 根据设备类型决定修复方案
+  let titleIcon, titleText, bodyHtml;
+
+  if (isWindows) {
+    titleIcon = '🪟'; titleText = 'Windows 远程桌面修复';
+    window._sshCmds = {
+      a: 'net start TermService',
+      b: 'Set-Service -Name TermService -StartupType Automatic',
+    };
+    bodyHtml = `
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 14px;font-size:12px;color:#1e40af">
+        <b>${ip}</b>（Windows）ping 正常但远程桌面端口无响应<br>
+        <span style="color:#6b7280;display:block;margin-top:2px">Windows 使用 RDP（3389端口），不是 VNC。可通过 SSH 或 PowerShell 远程重启 RDP 服务。</span>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px">方法：PowerShell 重启远程桌面服务</div>
+      ${sshStep(1,'SSH 或 PowerShell 登录','ssh 用户名@'+ip,'a_ssh')}
+      ${sshStep(2,'重启 RDP 服务','net start TermService','a')}
+      ${sshStep(3,'设为开机自启（防再次失效）','Set-Service -Name TermService -StartupType Automatic','b')}
+      <div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:11px;color:#92400e;margin-top:4px">
+        ⚠️ Windows 端口检测用的是 5900（VNC），Windows 默认不开 VNC，所以"屏幕共享挂了"可能是正常现象。<br>如果你们用的是 RDP 远程，可以忽略这个警告。
+      </div>`;
+    window._sshCmds['a_ssh'] = 'ssh 用户名@' + ip;
+
+  } else if (isNas) {
+    const isSynology = deviceType.includes('群晖');
+    const isTerramaster = deviceType.includes('特威马');
+    titleIcon = '💾'; titleText = 'NAS 远程访问修复';
+    window._sshCmds = {
+      a: 'ssh admin@' + ip,
+      b: isSynology ? 'sudo synoservicectl --restart pkg-VirtualDSM' : 'sudo /etc/init.d/vncserver restart',
+      c: isSynology ? 'sudo synoservicectl --start synodsmnotify' : '',
+    };
+    bodyHtml = `
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;font-size:12px;color:#166534">
+        <b>${ip}</b>（${deviceType}）ping 正常但 VNC/远程访问无响应<br>
+        <span style="color:#6b7280;display:block;margin-top:2px">NAS 设备通常有自己的管理界面，优先用 Web 管理页面操作。</span>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:8px">优先方法：浏览器打开 NAS 管理页面</div>
+      <div style="background:#f3f4f6;border-radius:8px;padding:10px 12px;font-size:12px;margin-bottom:12px">
+        浏览器访问：<code style="color:#2563eb">http://${ip}:5000</code>（群晖默认端口）<br>
+        登录后进入「控制面板 → 终端机与SNMP → 启用 SSH 功能」，再用下方命令修复。
+      </div>
+      <div style="border-top:1px solid #e5e7eb;margin-bottom:12px"></div>
+      <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px">备用方法：SSH 命令行修复</div>
+      ${sshStep(1,'SSH 登录 NAS','ssh admin@'+ip,'a')}
+      ${sshStep(2,'重启远程桌面/VNC 服务', isSynology ? 'sudo synoservicectl --restart pkg-VirtualDSM' : 'sudo /etc/init.d/vncserver restart','b')}`;
+
+  } else {
+    // Mac mini / Mac PRO / 服务器（默认 macOS）
+    titleIcon = '🖥'; titleText = 'SSH 修复屏幕共享';
+    window._sshCmds = {
+      a: 'ssh 用户名@' + ip,
+      b: 'sudo launchctl kickstart -k system/com.apple.screensharing',
+      c: 'ssh 用户名@' + ip + ' "sudo launchctl kickstart -k system/com.apple.screensharing"',
+    };
+    bodyHtml = `
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;font-size:12px;color:#166534">
+        <b>${ip}</b> &nbsp;ping 正常 ✅ &nbsp;│&nbsp; VNC 5900 无响应 ❌<br>
+        <span style="color:#6b7280;display:block;margin-top:2px">机器在线，屏幕共享服务崩溃，SSH 进去重启即可，无需去现场</span>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:6px">🚀 方法一：一条命令搞定（推荐）</div>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:6px">打开终端，粘贴进去回车，输入密码后自动完成</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <code id="sshOneliner" style="flex:1;background:#f3f4f6;padding:8px 10px;border-radius:8px;font-size:11px;word-break:break-all;line-height:1.6"></code>
+          <button class="btn btn-sm" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;white-space:nowrap;flex-shrink:0" id="btnCopyOneliner">复制</button>
+        </div>
+        <div style="font-size:11px;color:#9ca3af;margin-top:5px">⚠️ 把 <b>用户名</b> 替换成该机器的管理员账号</div>
+      </div>
+      <div style="border-top:1px solid #e5e7eb"></div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px">📋 方法二：分步操作</div>
+        ${sshStep(1,'打开终端，SSH 登录机器','ssh 用户名@'+ip,'a','输入密码后出现 用户名@机器名 ~ % 表示登录成功')}
+        ${sshStep(2,'重启屏幕共享服务','sudo launchctl kickstart -k system/com.apple.screensharing','b','输入 sudo 密码，命令无报错即成功')}
+        ${sshStep(3,'回到这里点"检测"确认','','','约 5 秒后再检测，状态应变为 ✅ 可远程', true)}
+      </div>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;font-size:11px;color:#991b1b">
+        <b>如果 SSH 也连不上？</b><br>
+        <span style="color:#6b7280;line-height:1.8;display:block;margin-top:4px">
+          • 机器休眠 → 去现场唤醒或配置 WoL<br>
+          • SSH 未开启 → 去现场：系统设置 → 通用 → 共享 → 开启「远程登录」<br>
+          • 防火墙拦截 → 联系网络管理员
+        </span>
+      </div>`;
+  }
 
   modal.innerHTML = `
-    <div class="modal" style="border-radius:16px;max-width:480px;margin:auto">
-      <div class="modal-header" style="background:#fffbeb;border-bottom:1px solid #fde68a;border-radius:16px 16px 0 0">
-        <span style="font-weight:700;color:#92400e">⚠️ SSH 修复屏幕共享</span>
-        <button class="modal-close" onclick="document.getElementById('sshTipModal').classList.add('hidden')">×</button>
+    <div class="modal" style="border-radius:16px;max-width:480px;margin:auto;max-height:90vh;overflow-y:auto">
+      <div class="modal-header" style="background:#fffbeb;border-bottom:1px solid #fde68a;border-radius:16px 16px 0 0;position:sticky;top:0;z-index:1">
+        <span style="font-weight:700;color:#92400e">${titleIcon} ${titleText}</span>
+        <button class="modal-close" id="btnSshModalClose">×</button>
       </div>
-      <div style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px">
-
-        <!-- 状态说明 -->
-        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;font-size:12px;color:#166534">
-          <b>${ip}</b> &nbsp;ping 正常 ✅ &nbsp;│&nbsp; VNC 5900 无响应 ❌<br>
-          <span style="color:#6b7280;margin-top:2px;display:block">机器在线，屏幕共享服务崩溃，SSH 进去重启即可，无需去现场</span>
-        </div>
-
-        <!-- 方法一：一键命令 -->
-        <div>
-          <div style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:6px">🚀 方法一：一条命令搞定（推荐）</div>
-          <div style="font-size:11px;color:#6b7280;margin-bottom:6px">打开终端，把下面命令粘贴进去回车，输入密码后自动重启屏幕共享</div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <code style="flex:1;background:#f3f4f6;padding:8px 10px;border-radius:8px;font-size:11px;word-break:break-all;line-height:1.6">${oneliner}</code>
-            <button class="btn btn-sm" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;white-space:nowrap;flex-shrink:0" onclick="navigator.clipboard.writeText(\`${oneliner}\`).then(()=>toast('已复制'))">复制</button>
-          </div>
-          <div style="font-size:11px;color:#9ca3af;margin-top:5px">⚠️ 把 <b>用户名</b> 替换成该机器的管理员账号</div>
-        </div>
-
-        <div style="border-top:1px solid #e5e7eb"></div>
-
-        <!-- 方法二：分步 -->
-        <div>
-          <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px">📋 方法二：分步操作</div>
-
-          <!-- Step 1 -->
-          <div style="display:flex;gap:10px;margin-bottom:12px">
-            <div style="width:22px;height:22px;background:#2563eb;color:#fff;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">1</div>
-            <div style="flex:1">
-              <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">打开终端，SSH 登录机器</div>
-              <div style="display:flex;align-items:center;gap:8px">
-                <code style="flex:1;background:#f3f4f6;padding:7px 10px;border-radius:6px;font-size:12px">ssh 用户名@${ip}</code>
-                <button class="btn btn-sm" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;white-space:nowrap;flex-shrink:0" onclick="navigator.clipboard.writeText('ssh 用户名@${ip}').then(()=>toast('已复制'))">复制</button>
-              </div>
-              <div style="font-size:11px;color:#9ca3af;margin-top:4px">输入密码后出现 <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px">用户名@机器名 ~ %</code> 表示登录成功</div>
-            </div>
-          </div>
-
-          <!-- Step 2 -->
-          <div style="display:flex;gap:10px;margin-bottom:12px">
-            <div style="width:22px;height:22px;background:#2563eb;color:#fff;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">2</div>
-            <div style="flex:1">
-              <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">重启屏幕共享服务</div>
-              <div style="display:flex;align-items:center;gap:8px">
-                <code style="flex:1;background:#f3f4f6;padding:7px 10px;border-radius:6px;font-size:11px;word-break:break-all">sudo launchctl kickstart -k system/com.apple.screensharing</code>
-                <button class="btn btn-sm" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;white-space:nowrap;flex-shrink:0" onclick="navigator.clipboard.writeText('sudo launchctl kickstart -k system/com.apple.screensharing').then(()=>toast('已复制'))">复制</button>
-              </div>
-              <div style="font-size:11px;color:#9ca3af;margin-top:4px">输入 sudo 密码，命令无报错即成功</div>
-            </div>
-          </div>
-
-          <!-- Step 3 -->
-          <div style="display:flex;gap:10px">
-            <div style="width:22px;height:22px;background:#16a34a;color:#fff;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">3</div>
-            <div style="flex:1">
-              <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">回到这里点"检测"确认</div>
-              <div style="font-size:11px;color:#6b7280">约 5 秒后再检测，状态应变为 ✅ 可远程</div>
-            </div>
-          </div>
-        </div>
-
-        <div style="border-top:1px solid #e5e7eb"></div>
-
-        <!-- 如果SSH也连不上 -->
-        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;font-size:11px;color:#991b1b">
-          <b>如果 SSH 也连不上？</b><br>
-          <span style="color:#6b7280;line-height:1.8">
-            • 机器可能休眠 → 需要发 Wake-on-LAN 包或去现场唤醒<br>
-            • SSH 服务未开启 → 需去现场开启「系统设置 → 通用 → 共享 → 远程登录」<br>
-            • 防火墙拦截端口 22 → 联系网络管理员
-          </span>
-        </div>
-
-      </div>
+      <div style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px">${bodyHtml}</div>
     </div>`;
 
   modal.classList.remove('hidden');
+
+  // 绑定关闭按钮
+  modal.querySelector('#btnSshModalClose').onclick = () => modal.classList.add('hidden');
+
+  // 绑定各复制按钮（用 data-key 关联命令）
+  modal.querySelectorAll('[data-copy-key]').forEach(btn => {
+    btn.onclick = () => {
+      const key = btn.dataset.copyKey;
+      navigator.clipboard.writeText(window._sshCmds[key] || '').then(() => toast('已复制'));
+    };
+  });
+
+  // Mac 一键命令
+  const oneEl = modal.querySelector('#sshOneliner');
+  if (oneEl) oneEl.textContent = window._sshCmds.c || '';
+  const oneBtn = modal.querySelector('#btnCopyOneliner');
+  if (oneBtn) oneBtn.onclick = () => navigator.clipboard.writeText(window._sshCmds.c || '').then(() => toast('已复制'));
+}
+
+// 生成步骤行 HTML
+function sshStep(n, label, cmd, key, hint, noCmd) {
+  const colors = ['#2563eb','#2563eb','#16a34a','#16a34a'];
+  const color = colors[n-1] || '#2563eb';
+  const cmdBlock = (!noCmd && cmd) ? `
+    <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+      <code style="flex:1;background:#f3f4f6;padding:7px 10px;border-radius:6px;font-size:11px;word-break:break-all">${cmd}</code>
+      <button class="btn btn-sm" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;white-space:nowrap;flex-shrink:0" data-copy-key="${key}">复制</button>
+    </div>` : '';
+  const hintEl = hint ? `<div style="font-size:11px;color:#9ca3af;margin-top:4px">${hint}</div>` : '';
+  return `
+    <div style="display:flex;gap:10px;margin-bottom:12px">
+      <div style="width:22px;height:22px;background:${color};color:#fff;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">${n}</div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:600;color:#374151">${label}</div>
+        ${cmdBlock}${hintEl}
+      </div>
+    </div>`;
 }
 
 async function checkSingle(ip) {
