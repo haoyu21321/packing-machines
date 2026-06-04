@@ -5,9 +5,79 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>打包机设备管理</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
+<!-- SVG 图标 sprite（隐藏，通过 <use> 引用） -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <!-- monitor 设备列表 -->
+  <symbol id="ic-monitor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+  </symbol>
+  <!-- bar-chart 统计 -->
+  <symbol id="ic-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
+  </symbol>
+  <!-- wifi Ping -->
+  <symbol id="ic-ping" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/>
+  </symbol>
+  <!-- tool 常见故障 -->
+  <symbol id="ic-tool" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+  </symbol>
+  <!-- clipboard-list 操作日志 -->
+  <symbol id="ic-log" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+  </symbol>
+  <!-- upload 导入 -->
+  <symbol id="ic-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+  </symbol>
+  <!-- download 导出 -->
+  <symbol id="ic-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+  </symbol>
+  <!-- rocket 发布 -->
+  <symbol id="ic-rocket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+  </symbol>
+  <!-- plus 新增 -->
+  <symbol id="ic-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </symbol>
+  <!-- lock 编辑模式（锁定） -->
+  <symbol id="ic-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </symbol>
+  <!-- unlock 已解锁 -->
+  <symbol id="ic-unlock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+  </symbol>
+  <!-- moon 暗色 -->
+  <symbol id="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </symbol>
+  <!-- sun 亮色 -->
+  <symbol id="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </symbol>
+  <!-- search 搜索 -->
+  <symbol id="ic-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </symbol>
+  <!-- history 历史 -->
+  <symbol id="ic-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.33"/><polyline points="12 7 12 12 15 14"/>
+  </symbol>
+  <!-- git-compare 差异预览 -->
+  <symbol id="ic-diff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/>
+  </symbol>
+</svg>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; color: #222; font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  .ic { width: 15px; height: 15px; vertical-align: -3px; flex-shrink: 0; }
+  .ic-lg { width: 18px; height: 18px; vertical-align: -4px; flex-shrink: 0; }
 
   /* 顶栏 */
   .topbar {
@@ -32,6 +102,9 @@
   .btn-danger  { background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; }
   .btn-ghost   { background: rgba(255,255,255,.15); color: #fff; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,.2); }
   .btn-ghost:hover { background: rgba(255,255,255,.25); }
+  /* 顶栏按钮图标颜色 */
+  .btn-ghost .ic, .btn-ghost .ic-lg { color: rgba(255,255,255,.85); }
+  .btn-primary .ic, .btn-success .ic { color: #fff; }
   .btn-sm { padding: 4px 10px; font-size: 11px; border-radius: 6px; }
 
   /* 搜索栏 */
@@ -144,18 +217,52 @@
 
   /* Tab 切换 */
   .tabs { background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; padding: 0 24px; flex-shrink: 0; gap: 4px; }
-  .tab { padding: 12px 18px; cursor: pointer; font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; color: #94a3b8; transition: all .2s; position: relative; }
+  .tab { padding: 10px 18px; cursor: pointer; font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; color: #94a3b8; transition: all .2s; position: relative; display:inline-flex; align-items:center; gap:6px; }
   .tab:hover { color: #3b82f6; }
   .tab.active { border-bottom-color: #3b82f6; color: #2563eb; font-weight: 600; }
   .tab.active::after { content:''; position:absolute; bottom:-1px; left:50%; transform:translateX(-50%); width:6px; height:6px; background:#3b82f6; border-radius:50%; }
+  .tab .ic { color: inherit; transition: color .2s; }
+  /* 每个 tab 图标有自己的强调色，非激活时淡化 */
+  #tab-devices .ic { color: #64748b; } #tab-devices:hover .ic, #tab-devices.active .ic { color: #2563eb; }
+  #tab-stats .ic   { color: #64748b; } #tab-stats:hover .ic,   #tab-stats.active .ic   { color: #8b5cf6; }
+  #tab-ping .ic    { color: #64748b; } #tab-ping:hover .ic,    #tab-ping.active .ic    { color: #06b6d4; }
+  #tab-fault .ic   { color: #64748b; } #tab-fault:hover .ic,   #tab-fault.active .ic   { color: #f59e0b; }
+  #tab-log .ic     { color: #64748b; } #tab-log:hover .ic,     #tab-log.active .ic     { color: #10b981; }
 
-  /* ping 状态 */
-  .ping-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+  /* ping / 远程状态 */
+  .ping-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; flex-shrink:0; }
   .ping-ok   { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,.6); }
   .ping-fail { background: #ef4444; }
   .ping-wait { background: #d1d5db; }
   .ping-ing  { background: #f59e0b; animation: blink .8s infinite; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* 综合状态标签 */
+  .check-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap;
+  }
+  .check-ok      { background: #dcfce7; color: #15803d; }
+  .check-warn    { background: #fef9c3; color: #a16207; }
+  .check-fail    { background: #fee2e2; color: #dc2626; }
+  .check-pending { background: #f3f4f6; color: #6b7280; }
+  .check-ing     { background: #fffbeb; color: #d97706; }
+  /* 行高亮：在线但远程挂了 */
+  tr.row-warn td { background: #fffbeb !important; }
+  tr.row-warn:hover td { background: #fef3c7 !important; }
+  body.dark tr.row-warn td { background: rgba(251,191,36,.08) !important; }
+
+  /* 筛选条 */
+  .ping-filter-bar { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .ping-filter-btn {
+    padding: 4px 12px; border-radius: 20px; border: 1px solid #d1d5db;
+    background: #fff; font-size: 12px; cursor: pointer; transition: all .15s;
+    color: #374151;
+  }
+  .ping-filter-btn:hover { border-color: #3b82f6; color: #2563eb; }
+  .ping-filter-btn.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+  body.dark .ping-filter-btn { background: #1e293b; color: #94a3b8; border-color: #334155; }
+  body.dark .ping-filter-btn.active { background: #2563eb; color: #fff; }
 
   /* 日志页 */
   .log-wrap { flex: 1; overflow: auto; padding: 16px 24px; }
@@ -529,32 +636,32 @@
   <div style="display:flex;align-items:center;gap:12px">
     <span id="syncStatus" style="font-size:11px;color:rgba(255,255,255,.6)"></span>
     <div class="topbar-right" id="editControls" style="display:none">
-      <button class="btn btn-ghost" onclick="openImport()">📥 <span>导入 Excel</span></button>
-      <button class="btn btn-ghost" onclick="exportExcel()">📤 <span>导出 Excel</span></button>
-      <button class="btn btn-success" onclick="publishData()" id="btnPublish">🚀 <span>发布到线上</span></button>
-      <button class="btn btn-primary" onclick="openAdd()">＋ <span>新增设备</span></button>
+      <button class="btn btn-ghost" onclick="openImport()"><svg class="ic"><use href="#ic-upload"/></svg> <span>导入 Excel</span></button>
+      <button class="btn btn-ghost" onclick="exportExcel()"><svg class="ic"><use href="#ic-download"/></svg> <span>导出 Excel</span></button>
+      <button class="btn btn-success" onclick="publishData()" id="btnPublish"><svg class="ic"><use href="#ic-rocket"/></svg> <span>发布到线上</span></button>
+      <button class="btn btn-primary" onclick="openAdd()"><svg class="ic"><use href="#ic-plus"/></svg> <span>新增设备</span></button>
     </div>
     <div id="lockControls">
-      <button class="btn btn-ghost" onclick="exportExcel()">📤 <span>导出 Excel</span></button>
-      <button class="btn btn-ghost" onclick="unlockEdit()" style="background:rgba(255,255,255,.25)">🔒 <span>编辑模式</span></button>
+      <button class="btn btn-ghost" onclick="exportExcel()"><svg class="ic"><use href="#ic-download"/></svg> <span>导出 Excel</span></button>
+      <button class="btn btn-ghost" onclick="unlockEdit()" style="background:rgba(255,255,255,.25)" id="btnEditMode"><svg class="ic ic-lock-icon"><use href="#ic-lock"/></svg> <span>编辑模式</span></button>
     </div>
-    <button class="btn btn-ghost" id="btnDark" onclick="toggleDark()" title="切换暗色模式" style="font-size:16px;padding:5px 9px;min-width:34px">🌙</button>
+    <button class="btn btn-ghost" id="btnDark" onclick="toggleDark()" title="切换暗色模式" style="padding:5px 9px;min-width:34px"><svg class="ic-lg" id="darkIcon"><use href="#ic-moon"/></svg></button>
   </div>
 </div>
 
 <!-- Tab -->
 <div class="tabs">
-  <div class="tab active" id="tab-devices" onclick="switchTab('devices')">🖥 设备列表</div>
-  <div class="tab" id="tab-stats" onclick="switchTab('stats')">📊 统计</div>
-  <div class="tab" id="tab-ping" onclick="switchTab('ping')">📡 Ping 检测</div>
-  <div class="tab" id="tab-fault" onclick="switchTab('fault')">🔧 常见故障</div>
-  <div class="tab" id="tab-log" onclick="switchTab('log')">📋 操作日志</div>
+  <div class="tab active" id="tab-devices" onclick="switchTab('devices')"><svg class="ic"><use href="#ic-monitor"/></svg> 设备列表</div>
+  <div class="tab" id="tab-stats" onclick="switchTab('stats')"><svg class="ic"><use href="#ic-chart"/></svg> 统计</div>
+  <div class="tab" id="tab-ping" onclick="switchTab('ping')"><svg class="ic"><use href="#ic-ping"/></svg> Ping 检测</div>
+  <div class="tab" id="tab-fault" onclick="switchTab('fault')"><svg class="ic"><use href="#ic-tool"/></svg> 常见故障</div>
+  <div class="tab" id="tab-log" onclick="switchTab('log')"><svg class="ic"><use href="#ic-log"/></svg> 操作日志</div>
 </div>
 
 <!-- 搜索栏 -->
 <div class="toolbar" id="panel-toolbar">
   <div class="search-wrap">
-    <span class="search-icon">🔍</span>
+    <span class="search-icon"><svg class="ic"><use href="#ic-search"/></svg></span>
     <input type="text" id="searchInput" placeholder="搜索负责人、IP、MAC地址、资产编号、设备编号…" oninput="renderTable()">
   </div>
 
@@ -662,27 +769,35 @@
 
 <!-- Ping 检测面板 -->
 <div id="panel-ping" class="table-wrap" style="display:none">
-  <div style="margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-    <button class="btn btn-primary" onclick="pingAll()" id="btnPingAll">📡 一键检测全部</button>
-    <div style="position:relative;flex:1;min-width:200px;max-width:360px">
-      <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#9ca3af">🔍</span>
-      <input type="text" id="pingSearch" placeholder="搜索负责人、IP、机房编号…" oninput="renderPingTable()"
+  <div style="margin-bottom:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="pingAll()" id="btnPingAll"><svg class="ic"><use href="#ic-ping"/></svg> <span>一键检测全部</span></button>
+    <div style="position:relative;flex:1;min-width:180px;max-width:320px">
+      <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#9ca3af"><svg class="ic"><use href="#ic-search"/></svg></span>
+      <input type="text" id="pingSearch" placeholder="搜索负责人、IP、机房…" oninput="renderPingTable()"
         style="width:100%;padding:7px 12px 7px 34px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;outline:none">
     </div>
     <span id="pingStatus" style="font-size:12px;color:#6b7280"></span>
     <span style="font-size:12px;color:#9ca3af;margin-left:auto">需先启动：<code style="background:#f3f4f6;padding:2px 6px;border-radius:4px">node ping-server.js</code></span>
   </div>
+  <!-- 筛选条 -->
+  <div class="ping-filter-bar" style="margin-bottom:10px">
+    <span style="font-size:12px;color:#6b7280">筛选：</span>
+    <button class="ping-filter-btn active" onclick="setPingFilter('all',this)">全部 <span id="pfAll">—</span></button>
+    <button class="ping-filter-btn" onclick="setPingFilter('ok',this)">✅ 可远程 <span id="pfOk">—</span></button>
+    <button class="ping-filter-btn" onclick="setPingFilter('warn',this)">⚠️ 在线无远程 <span id="pfWarn">—</span></button>
+    <button class="ping-filter-btn" onclick="setPingFilter('fail',this)">❌ 离线 <span id="pfFail">—</span></button>
+  </div>
   <table>
     <thead>
       <tr>
-        <th>在线状态</th>
-        <th>延迟</th>
+        <th>综合状态</th>
+        <th>网络</th>
+        <th>屏幕共享</th>
         <th>机房编号</th>
         <th>设备类型</th>
         <th>负责人</th>
         <th>IP 地址</th>
         <th>存放位置</th>
-        <th>业务类型</th>
         <th>操作</th>
       </tr>
     </thead>
@@ -695,7 +810,7 @@
   <div class="fault-toolbar">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <div class="fault-search">
-        <span class="fault-search-icon">🔍</span>
+        <span class="fault-search-icon"><svg class="ic"><use href="#ic-search"/></svg></span>
         <input type="text" id="faultSearch" placeholder="搜索故障现象…" oninput="renderFaults()">
       </div>
       <span class="count-badge" id="faultCount">共 0 条</span>
@@ -892,7 +1007,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" style="background:#f3f4f6;color:#374151" onclick="closeModal('importModal')">取消</button>
-      <button class="btn" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe" onclick="showImportDiff()" id="btnDiff" disabled>🔍 差异预览</button>
+      <button class="btn" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe" onclick="showImportDiff()" id="btnDiff" disabled><svg class="ic"><use href="#ic-diff"/></svg> 差异预览</button>
       <button class="btn btn-warning" onclick="doImport(false)" id="btnImportAppend" disabled>追加导入</button>
       <button class="btn btn-primary" onclick="doImport(true)" id="btnImportOverwrite" disabled>覆盖导入</button>
     </div>
@@ -1395,7 +1510,7 @@ function renderTable() {
         ${d.notice ? `<div class="mc-row"><span class="mc-label">注意</span><span style="color:#d97706">${d.notice}</span></div>` : ''}
       </div>
       <div class="mc-footer">
-        <button class="btn btn-sm" style="background:#f1f5f9;color:#374151" onclick="openHistory('${d.id}')">📋 历史</button>
+        <button class="btn btn-sm" style="background:#f1f5f9;color:#374151" onclick="openHistory('${d.id}')"><svg class="ic"><use href="#ic-history"/></svg> 历史</button>
         ${isEditMode ? `<button class="btn btn-warning btn-sm" onclick="openEdit('${d.id}')">编辑</button>
         <button class="btn btn-danger btn-sm" onclick="openDelete('${d.id}')">删除</button>` : ''}
       </div>
@@ -1764,52 +1879,228 @@ function renderLog() {
   `).join('');
 }
 
-// ========== Ping 检测 ==========
+// ========== Ping / 远程检测 ==========
 const PING_PORT = 7789;
-let pingResults = {};
+let checkResults = {};   // { ip: { ping:{alive,ms}, vnc:{open} } | 'checking' }
+let pingFilter   = 'all'; // 'all' | 'ok' | 'warn' | 'fail'
+
+// 根据结果判断综合状态
+// 返回 'ok' | 'warn' | 'fail' | 'checking' | 'pending'
+function getCheckState(ip, result) {
+  if (!ip) return 'pending';
+  if (!result) return 'pending';
+  if (result === 'checking') return 'checking';
+  const pingOk = result.ping?.alive;
+  const vncOk  = result.vnc?.open;
+  if (pingOk && vncOk)  return 'ok';
+  if (pingOk && !vncOk) return 'warn';  // 在线但屏幕共享挂了
+  return 'fail';
+}
+
+function setPingFilter(f, btn) {
+  pingFilter = f;
+  document.querySelectorAll('.ping-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPingTable();
+}
+
+function updatePingFilterCounts() {
+  const withIp = devices.filter(d => d.ip);
+  let ok = 0, warn = 0, fail = 0;
+  withIp.forEach(d => {
+    const s = getCheckState(d.ip, checkResults[d.ip]);
+    if (s === 'ok')   ok++;
+    else if (s === 'warn') warn++;
+    else if (s === 'fail') fail++;
+  });
+  const el = id => document.getElementById(id);
+  if (el('pfAll'))  el('pfAll').textContent  = `(${withIp.length})`;
+  if (el('pfOk'))   el('pfOk').textContent   = `(${ok})`;
+  if (el('pfWarn')) el('pfWarn').textContent = `(${warn})`;
+  if (el('pfFail')) el('pfFail').textContent = `(${fail})`;
+}
 
 function renderPingTable() {
   const q = (document.getElementById('pingSearch')?.value || '').trim().toLowerCase();
-  const list = q ? devices.filter(d =>
+  let list = q ? devices.filter(d =>
     [d.owner, d.ip, d.roomNo, d.type, d.location, d.biz].some(v => v && v.toLowerCase().includes(q))
-  ) : devices;
+  ) : [...devices];
+
+  // 按综合状态排序：warn 优先，再 fail，再 ok，最后 pending
+  const order = { warn:0, fail:1, checking:2, ok:3, pending:4 };
+  list.sort((a, b) => (order[getCheckState(a.ip, checkResults[a.ip])] ?? 4) - (order[getCheckState(b.ip, checkResults[b.ip])] ?? 4));
+
+  // 筛选
+  if (pingFilter !== 'all') {
+    list = list.filter(d => getCheckState(d.ip, checkResults[d.ip]) === pingFilter);
+  }
+
   const tbody = document.getElementById('pingTableBody');
   tbody.innerHTML = list.map(d => {
-    const r = pingResults[d.ip];
-    let dot, latency;
-    if (!d.ip) { dot = 'ping-wait'; latency = '无IP'; }
-    else if (!r) { dot = 'ping-wait'; latency = '未检测'; }
-    else if (r === 'checking') { dot = 'ping-ing'; latency = '检测中…'; }
-    else if (r.alive) { dot = 'ping-ok'; latency = `${r.ms}ms`; }
-    else { dot = 'ping-fail'; latency = '不通'; }
+    const r     = checkResults[d.ip];
+    const state = getCheckState(d.ip, r);
+
+    // 综合状态标签
+    const badgeMap = {
+      ok:       `<span class="check-badge check-ok"><span class="ping-dot ping-ok"></span>可远程</span>`,
+      warn:     `<span class="check-badge check-warn"><span class="ping-dot ping-ing"></span>在线无远程</span>`,
+      fail:     `<span class="check-badge check-fail"><span class="ping-dot ping-fail"></span>离线</span>`,
+      checking: `<span class="check-badge check-ing"><span class="ping-dot ping-ing"></span>检测中…</span>`,
+      pending:  `<span class="check-badge check-pending">未检测</span>`,
+    };
+    const badge = !d.ip ? `<span class="check-badge check-pending">无IP</span>` : (badgeMap[state] || badgeMap.pending);
+
+    // 网络列
+    const pingOk = r && r !== 'checking' && r.ping?.alive;
+    const pingMs = pingOk ? `${r.ping.ms}ms` : '';
+    const netCell = !d.ip ? '—'
+      : !r ? '<span style="color:#9ca3af;font-size:11px">—</span>'
+      : r === 'checking' ? '<span class="ping-dot ping-ing" style="margin:0"></span>'
+      : pingOk ? `<span class="ping-dot ping-ok"></span><span style="font-size:11px;color:#15803d">${pingMs}</span>`
+      : `<span class="ping-dot ping-fail"></span><span style="font-size:11px;color:#dc2626">不通</span>`;
+
+    // 屏幕共享列
+    const vncOpen = r && r !== 'checking' && r.vnc?.open;
+    const vncCell = !d.ip ? '—'
+      : !r ? '<span style="color:#9ca3af;font-size:11px">—</span>'
+      : r === 'checking' ? '<span class="ping-dot ping-ing" style="margin:0"></span>'
+      : vncOpen ? `<span class="ping-dot ping-ok"></span><span style="font-size:11px;color:#15803d">正常</span>`
+      : pingOk  ? `<span class="ping-dot ping-fail"></span><span style="font-size:11px;color:#d97706;font-weight:600">挂了</span>`
+      : `<span style="color:#9ca3af;font-size:11px">—</span>`;
+
+    // warn 行高亮
+    const rowClass = state === 'warn' ? 'row-warn' : '';
+
     return `
-      <tr>
-        <td><span class="ping-dot ${dot}"></span>${dot==='ping-ok'?'在线':dot==='ping-fail'?'离线':dot==='ping-ing'?'检测中':'未知'}</td>
-        <td class="mono">${latency}</td>
+      <tr class="${rowClass}">
+        <td>${badge}</td>
+        <td>${netCell}</td>
+        <td>${vncCell}</td>
         <td><b>${d.roomNo||''}</b></td>
         <td>${d.type||''}</td>
         <td style="color:#1a3a6b;font-weight:500">${d.owner||''}</td>
-        <td class="mono">${d.ip||''}</td>
+        <td class="mono" style="font-size:12px">${d.ip||''}</td>
         <td>${d.location||''}</td>
-        <td>${d.biz||''}</td>
-        <td><button class="btn btn-primary btn-sm" onclick="pingSingle('${d.ip}','${d.id}')" ${!d.ip?'disabled':''}>Ping</button></td>
+        <td>
+          <button class="btn btn-primary btn-sm" onclick="checkSingle('${d.ip}','${d.id}')" ${!d.ip?'disabled':''}>检测</button>
+          ${state==='warn' ? `<button class="btn btn-sm" style="background:#fef9c3;color:#a16207;border:1px solid #fde68a;margin-left:4px" onclick="showSshTip('${d.ip}')" title="SSH修复提示">SSH修复</button>` : ''}
+        </td>
       </tr>
     `;
   }).join('');
+
+  updatePingFilterCounts();
 }
 
-async function pingSingle(ip, id) {
+// SSH 修复提示弹窗
+function showSshTip(ip) {
+  let modal = document.getElementById('sshTipModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'sshTipModal';
+    modal.className = 'modal-overlay';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.classList.add('hidden'); });
+  }
+
+  const oneliner = `ssh 用户名@${ip} "sudo launchctl kickstart -k system/com.apple.screensharing"`;
+
+  modal.innerHTML = `
+    <div class="modal" style="border-radius:16px;max-width:480px;margin:auto">
+      <div class="modal-header" style="background:#fffbeb;border-bottom:1px solid #fde68a;border-radius:16px 16px 0 0">
+        <span style="font-weight:700;color:#92400e">⚠️ SSH 修复屏幕共享</span>
+        <button class="modal-close" onclick="document.getElementById('sshTipModal').classList.add('hidden')">×</button>
+      </div>
+      <div style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px">
+
+        <!-- 状态说明 -->
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;font-size:12px;color:#166534">
+          <b>${ip}</b> &nbsp;ping 正常 ✅ &nbsp;│&nbsp; VNC 5900 无响应 ❌<br>
+          <span style="color:#6b7280;margin-top:2px;display:block">机器在线，屏幕共享服务崩溃，SSH 进去重启即可，无需去现场</span>
+        </div>
+
+        <!-- 方法一：一键命令 -->
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:6px">🚀 方法一：一条命令搞定（推荐）</div>
+          <div style="font-size:11px;color:#6b7280;margin-bottom:6px">打开终端，把下面命令粘贴进去回车，输入密码后自动重启屏幕共享</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <code style="flex:1;background:#f3f4f6;padding:8px 10px;border-radius:8px;font-size:11px;word-break:break-all;line-height:1.6">${oneliner}</code>
+            <button class="btn btn-sm" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;white-space:nowrap;flex-shrink:0" onclick="navigator.clipboard.writeText(\`${oneliner}\`).then(()=>toast('已复制'))">复制</button>
+          </div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:5px">⚠️ 把 <b>用户名</b> 替换成该机器的管理员账号</div>
+        </div>
+
+        <div style="border-top:1px solid #e5e7eb"></div>
+
+        <!-- 方法二：分步 -->
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px">📋 方法二：分步操作</div>
+
+          <!-- Step 1 -->
+          <div style="display:flex;gap:10px;margin-bottom:12px">
+            <div style="width:22px;height:22px;background:#2563eb;color:#fff;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">1</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">打开终端，SSH 登录机器</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <code style="flex:1;background:#f3f4f6;padding:7px 10px;border-radius:6px;font-size:12px">ssh 用户名@${ip}</code>
+                <button class="btn btn-sm" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;white-space:nowrap;flex-shrink:0" onclick="navigator.clipboard.writeText('ssh 用户名@${ip}').then(()=>toast('已复制'))">复制</button>
+              </div>
+              <div style="font-size:11px;color:#9ca3af;margin-top:4px">输入密码后出现 <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px">用户名@机器名 ~ %</code> 表示登录成功</div>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div style="display:flex;gap:10px;margin-bottom:12px">
+            <div style="width:22px;height:22px;background:#2563eb;color:#fff;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">2</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">重启屏幕共享服务</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <code style="flex:1;background:#f3f4f6;padding:7px 10px;border-radius:6px;font-size:11px;word-break:break-all">sudo launchctl kickstart -k system/com.apple.screensharing</code>
+                <button class="btn btn-sm" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;white-space:nowrap;flex-shrink:0" onclick="navigator.clipboard.writeText('sudo launchctl kickstart -k system/com.apple.screensharing').then(()=>toast('已复制'))">复制</button>
+              </div>
+              <div style="font-size:11px;color:#9ca3af;margin-top:4px">输入 sudo 密码，命令无报错即成功</div>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div style="display:flex;gap:10px">
+            <div style="width:22px;height:22px;background:#16a34a;color:#fff;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">3</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">回到这里点"检测"确认</div>
+              <div style="font-size:11px;color:#6b7280">约 5 秒后再检测，状态应变为 ✅ 可远程</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid #e5e7eb"></div>
+
+        <!-- 如果SSH也连不上 -->
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;font-size:11px;color:#991b1b">
+          <b>如果 SSH 也连不上？</b><br>
+          <span style="color:#6b7280;line-height:1.8">
+            • 机器可能休眠 → 需要发 Wake-on-LAN 包或去现场唤醒<br>
+            • SSH 服务未开启 → 需去现场开启「系统设置 → 通用 → 共享 → 远程登录」<br>
+            • 防火墙拦截端口 22 → 联系网络管理员
+          </span>
+        </div>
+
+      </div>
+    </div>`;
+
+  modal.classList.remove('hidden');
+}
+
+async function checkSingle(ip) {
   if (!ip) return;
-  pingResults[ip] = 'checking';
+  checkResults[ip] = 'checking';
   renderPingTable();
   try {
-    const res = await fetch(`http://127.0.0.1:${PING_PORT}/ping?ip=${ip}`, { signal: AbortSignal.timeout(5000) });
-    pingResults[ip] = await res.json();
+    const res = await fetch(`http://127.0.0.1:${PING_PORT}/checkall?ips=${ip}&port=5900`, { signal: AbortSignal.timeout(6000) });
+    const data = await res.json();
+    checkResults[ip] = data[ip];
   } catch(e) {
-    pingResults[ip] = { alive: false, ms: null };
-    if (e.message.includes('Failed to fetch') || e.message.includes('fetch')) {
-      toast('连不上 ping-server，请先运行：node ping-server.js', 'error');
-    }
+    checkResults[ip] = { ping: { alive: false, ms: null }, vnc: { open: false } };
+    if (e.message?.includes('fetch')) toast('连不上 ping-server，请先运行：node ping-server.js', 'error');
   }
   renderPingTable();
 }
@@ -1822,28 +2113,33 @@ async function pingAll() {
   const ips = [...new Set(filtered.map(d => d.ip).filter(ip => ip && ip.trim()))];
   if (ips.length === 0) { toast('没有可检测的IP', 'error'); return; }
 
-  ips.forEach(ip => pingResults[ip] = 'checking');
+  ips.forEach(ip => { checkResults[ip] = 'checking'; });
   renderPingTable();
 
   const btn = document.getElementById('btnPingAll');
   btn.disabled = true;
-  btn.textContent = '检测中…';
-  document.getElementById('pingStatus').textContent = `正在检测 ${ips.length} 个IP…`;
+  const origHtml = btn.innerHTML;
+  btn.innerHTML = '检测中…';
+  document.getElementById('pingStatus').textContent = `正在检测 ${ips.length} 个设备…`;
 
   try {
-    const res = await fetch(`http://127.0.0.1:${PING_PORT}/pingall?ips=${ips.join(',')}`, { signal: AbortSignal.timeout(30000) });
+    const res = await fetch(`http://127.0.0.1:${PING_PORT}/checkall?ips=${ips.join(',')}&port=5900`, { signal: AbortSignal.timeout(90000) });
     const data = await res.json();
-    Object.assign(pingResults, data);
-    const ok = Object.values(data).filter(r => r.alive).length;
-    document.getElementById('pingStatus').textContent = `检测完成：${ok} 在线 / ${ips.length - ok} 离线`;
+    Object.assign(checkResults, data);
+
+    const ok   = Object.values(data).filter(r => r.ping?.alive && r.vnc?.open).length;
+    const warn = Object.values(data).filter(r => r.ping?.alive && !r.vnc?.open).length;
+    const fail = Object.values(data).filter(r => !r.ping?.alive).length;
+    document.getElementById('pingStatus').textContent =
+      `✅ 可远程 ${ok}  ⚠️ 在线无远程 ${warn}  ❌ 离线 ${fail}`;
   } catch(e) {
-    ips.forEach(ip => { if (pingResults[ip] === 'checking') pingResults[ip] = { alive: false, ms: null }; });
+    ips.forEach(ip => { if (checkResults[ip] === 'checking') checkResults[ip] = { ping: { alive: false }, vnc: { open: false } }; });
     toast('连不上 ping-server，请先运行：node ping-server.js', 'error');
     document.getElementById('pingStatus').textContent = '';
   }
 
   btn.disabled = false;
-  btn.textContent = '📡 一键检测全部';
+  btn.innerHTML = origHtml;
   renderPingTable();
 }
 
@@ -2066,7 +2362,10 @@ let darkMode = localStorage.getItem('darkMode') === '1';
 function applyDark() {
   document.body.classList.toggle('dark', darkMode);
   const btn = document.getElementById('btnDark');
-  if (btn) btn.textContent = darkMode ? '☀️' : '🌙';
+  const darkIcon = document.getElementById('darkIcon');
+  if (darkIcon) darkIcon.innerHTML = darkMode
+    ? '<use href="#ic-sun"/>'
+    : '<use href="#ic-moon"/>';
 }
 function toggleDark() {
   darkMode = !darkMode;
