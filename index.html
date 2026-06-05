@@ -1316,7 +1316,7 @@ let lastSyncTime = null;
 
 function setSyncStatus(msg, color='rgba(255,255,255,.6)') {
   const el = document.getElementById('syncStatus');
-  if (el) { el.textContent = msg; el.style.color = color; }
+  if (el) { el.innerHTML = msg; el.style.color = color; }
 }
 
 async function fetchFromGitHub() {
