@@ -72,6 +72,38 @@
   <symbol id="ic-diff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/>
   </symbol>
+  <!-- check-circle 可远程/已同步 -->
+  <symbol id="ic-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/>
+  </symbol>
+  <!-- alert-triangle 在线无远程/警告 -->
+  <symbol id="ic-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </symbol>
+  <!-- x-circle 离线 -->
+  <symbol id="ic-x-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+  </symbol>
+  <!-- laptop MAC PRO -->
+  <symbol id="ic-laptop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M1 21h22"/>
+  </symbol>
+  <!-- server 服务器 -->
+  <symbol id="ic-server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><circle cx="7" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="7" cy="18" r="1" fill="currentColor" stroke="none"/>
+  </symbol>
+  <!-- hard-drive NAS -->
+  <symbol id="ic-hdd" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><circle cx="16" cy="16" r="1" fill="currentColor" stroke="none"/>
+  </symbol>
+  <!-- settings 通用 -->
+  <symbol id="ic-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </symbol>
+  <!-- windows 台式机 -->
+  <symbol id="ic-windows" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><line x1="9" y1="8" x2="9" y2="14" stroke-width="1.5"/><line x1="6" y1="11" x2="12" y2="11" stroke-width="1.5"/><line x1="13" y1="8" x2="13" y2="11" stroke-width="1.5"/><line x1="16" y1="8" x2="16" y2="11" stroke-width="1.5"/><line x1="13" y1="12" x2="13" y2="14" stroke-width="1.5"/><line x1="16" y1="12" x2="16" y2="14" stroke-width="1.5"/>
+  </symbol>
 </svg>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -783,9 +815,9 @@
   <div class="ping-filter-bar" style="margin-bottom:10px">
     <span style="font-size:12px;color:#6b7280">筛选：</span>
     <button class="ping-filter-btn active" onclick="setPingFilter('all',this)">全部 <span id="pfAll">—</span></button>
-    <button class="ping-filter-btn" onclick="setPingFilter('ok',this)">✅ 可远程 <span id="pfOk">—</span></button>
-    <button class="ping-filter-btn" onclick="setPingFilter('warn',this)">⚠️ 在线无远程 <span id="pfWarn">—</span></button>
-    <button class="ping-filter-btn" onclick="setPingFilter('fail',this)">❌ 离线 <span id="pfFail">—</span></button>
+    <button class="ping-filter-btn" onclick="setPingFilter('ok',this)"><svg class="ic" style="color:#16a34a"><use href="#ic-check-circle"/></svg> 可远程 <span id="pfOk">—</span></button>
+    <button class="ping-filter-btn" onclick="setPingFilter('warn',this)"><svg class="ic" style="color:#d97706"><use href="#ic-alert"/></svg> 在线无远程 <span id="pfWarn">—</span></button>
+    <button class="ping-filter-btn" onclick="setPingFilter('fail',this)"><svg class="ic" style="color:#dc2626"><use href="#ic-x-circle"/></svg> 离线 <span id="pfFail">—</span></button>
   </div>
   <table>
     <thead>
@@ -1341,7 +1373,7 @@ async function loadData() {
 
   // 骨架屏占位
   renderSkeleton();
-  setSyncStatus('⏳ 同步中…');
+  setSyncStatus('<svg style="width:12px;height:12px;vertical-align:-2px;margin-right:3px;color:rgba(255,255,255,.7)"><use href="#ic-history"/></svg>同步中…');
 
   // 开屏进度条动画
   setTimeout(() => { document.getElementById('splashBar').style.width = '60%'; }, 100);
@@ -1356,9 +1388,9 @@ async function loadData() {
     }
     localStorage.setItem(STORE_KEY, JSON.stringify(devices));
     lastSyncTime = new Date();
-    setSyncStatus(`✅ 已同步 ${formatTime(lastSyncTime)}`);
+    setSyncStatus(`<svg style="width:12px;height:12px;vertical-align:-2px;margin-right:3px;color:#4ade80"><use href="#ic-check-circle"/></svg>已同步 ${formatTime(lastSyncTime)}`);
   } catch(e) {
-    setSyncStatus('⚠️ 离线（使用本地缓存）', 'rgba(255,200,0,.8)');
+    setSyncStatus('<svg style="width:12px;height:12px;vertical-align:-2px;margin-right:3px;color:#fbbf24"><use href="#ic-alert"/></svg>离线（使用本地缓存）', 'rgba(255,200,0,.8)');
   }
 
   // 数据就绪，关闭开屏
@@ -1389,7 +1421,7 @@ setInterval(async () => {
     }
     localStorage.setItem(STORE_KEY, JSON.stringify(devices));
     lastSyncTime = new Date();
-    setSyncStatus(`✅ 已同步 ${formatTime(lastSyncTime)}`);
+    setSyncStatus(`<svg style="width:12px;height:12px;vertical-align:-2px;margin-right:3px;color:#4ade80"><use href="#ic-check-circle"/></svg>已同步 ${formatTime(lastSyncTime)}`);
     renderTable();
     renderPingTable();
     updateFilterOptions();
@@ -1811,7 +1843,7 @@ async function publishData() {
     }
 
     lastSyncTime = new Date();
-    setSyncStatus(`✅ 已同步 ${formatTime(lastSyncTime)}`);
+    setSyncStatus(`<svg style="width:12px;height:12px;vertical-align:-2px;margin-right:3px;color:#4ade80"><use href="#ic-check-circle"/></svg>已同步 ${formatTime(lastSyncTime)}`);
     toast('✅ 发布成功！线上页面约30秒后更新');
   } catch(e) {
     toast('发布失败：' + e.message, 'error');
@@ -2187,7 +2219,7 @@ async function pingAll() {
     const warn = Object.values(data).filter(r => r.ping?.alive && !r.vnc?.open).length;
     const fail = Object.values(data).filter(r => !r.ping?.alive).length;
     document.getElementById('pingStatus').textContent =
-      `✅ 可远程 ${ok}  ⚠️ 在线无远程 ${warn}  ❌ 离线 ${fail}`;
+      `<svg style="width:13px;height:13px;vertical-align:-2px;color:#16a34a"><use href="#ic-check-circle"/></svg> 可远程 ${ok} &nbsp;&nbsp;<svg style="width:13px;height:13px;vertical-align:-2px;color:#d97706"><use href="#ic-alert"/></svg> 在线无远程 ${warn} &nbsp;&nbsp;<svg style="width:13px;height:13px;vertical-align:-2px;color:#dc2626"><use href="#ic-x-circle"/></svg> 离线 ${fail}`;
   } catch(e) {
     ips.forEach(ip => { if (checkResults[ip] === 'checking') checkResults[ip] = { ping: { alive: false }, vnc: { open: false } }; });
     toast('连不上 ping-server，请先运行：node ping-server.js', 'error');
@@ -2281,14 +2313,25 @@ function renderFaults() {
   }
   empty.style.display = 'none';
 
-  const deviceIcons = { 'MAC-mini':'🖥', 'MAC PRO':'💻', '服务器':'🖧', 'windows台式机':'🪟', 'NAS':'💾', '通用':'⚙️' };
+  const deviceIconSvg = {
+    'MAC-mini':       ['#ic-monitor',  '#3b82f6','#eff6ff'],
+    'MAC PRO':        ['#ic-laptop',   '#8b5cf6','#f5f3ff'],
+    '服务器':          ['#ic-server',   '#0891b2','#ecfeff'],
+    'windows台式机':  ['#ic-windows',  '#0ea5e9','#e0f2fe'],
+    'NAS':            ['#ic-hdd',      '#d97706','#fffbeb'],
+    '通用':           ['#ic-settings', '#6b7280','#f3f4f6'],
+  };
+  function deviceIconHtml(type) {
+    const [href, color, bg] = deviceIconSvg[type] || deviceIconSvg['通用'];
+    return `<div class="fault-icon" style="background:${bg}"><svg style="width:20px;height:20px;color:${color}"><use href="${href}"/></svg></div>`;
+  }
 
   grid.innerHTML = list.map((f, i) => {
     const steps = (f.steps || '').split('\n').filter(s => s.trim());
     return `
     <div class="fault-card" style="animation-delay:${i * 0.04}s">
       <div class="fault-card-header">
-        <div class="fault-icon">${deviceIcons[f.device] || '⚙️'}</div>
+        ${deviceIconHtml(f.device)}
         <div style="flex:1">
           <div class="fault-title">${f.title}</div>
           <span class="fault-device">${f.device || '通用'}</span>
