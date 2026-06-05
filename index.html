@@ -2208,7 +2208,7 @@ async function pingAll() {
   btn.disabled = true;
   const origHtml = btn.innerHTML;
   btn.innerHTML = '检测中…';
-  document.getElementById('pingStatus').textContent = `正在检测 ${ips.length} 个设备…`;
+  document.getElementById('pingStatus').textContent = `正在检测 ${ips.length} 个设备…`;  // 纯文字，不含SVG，textContent OK
 
   try {
     const res = await fetch(`http://127.0.0.1:${PING_PORT}/checkall?ips=${ips.join(',')}&port=5900`, { signal: AbortSignal.timeout(90000) });
@@ -2218,7 +2218,7 @@ async function pingAll() {
     const ok   = Object.values(data).filter(r => r.ping?.alive && r.vnc?.open).length;
     const warn = Object.values(data).filter(r => r.ping?.alive && !r.vnc?.open).length;
     const fail = Object.values(data).filter(r => !r.ping?.alive).length;
-    document.getElementById('pingStatus').textContent =
+    document.getElementById('pingStatus').innerHTML =
       `<svg style="width:13px;height:13px;vertical-align:-2px;color:#16a34a"><use href="#ic-check-circle"/></svg> 可远程 ${ok} &nbsp;&nbsp;<svg style="width:13px;height:13px;vertical-align:-2px;color:#d97706"><use href="#ic-alert"/></svg> 在线无远程 ${warn} &nbsp;&nbsp;<svg style="width:13px;height:13px;vertical-align:-2px;color:#dc2626"><use href="#ic-x-circle"/></svg> 离线 ${fail}`;
   } catch(e) {
     ips.forEach(ip => { if (checkResults[ip] === 'checking') checkResults[ip] = { ping: { alive: false }, vnc: { open: false } }; });
