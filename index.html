@@ -1913,6 +1913,7 @@ function renderLog() {
 
 // ========== Ping / 远程检测 ==========
 const PING_PORT = 7789;
+const PING_HOST = 'http://10.1.58.240';
 let checkResults = {};   // { ip: { ping:{alive,ms}, vnc:{open} } | 'checking' }
 let pingFilter   = 'all'; // 'all' | 'ok' | 'warn' | 'fail'
 
@@ -2183,7 +2184,7 @@ async function checkSingle(ip) {
   checkResults[ip] = 'checking';
   renderPingTable();
   try {
-    const res = await fetch(`http://127.0.0.1:${PING_PORT}/checkall?ips=${ip}&port=5900`, { signal: AbortSignal.timeout(6000) });
+    const res = await fetch(`${PING_HOST}:${PING_PORT}/checkall?ips=${ip}&port=5900`, { signal: AbortSignal.timeout(6000) });
     const data = await res.json();
     checkResults[ip] = data[ip];
   } catch(e) {
@@ -2211,7 +2212,7 @@ async function pingAll() {
   document.getElementById('pingStatus').textContent = `正在检测 ${ips.length} 个设备…`;  // 纯文字，不含SVG，textContent OK
 
   try {
-    const res = await fetch(`http://127.0.0.1:${PING_PORT}/checkall?ips=${ips.join(',')}&port=5900`, { signal: AbortSignal.timeout(90000) });
+    const res = await fetch(`${PING_HOST}:${PING_PORT}/checkall?ips=${ips.join(',')}&port=5900`, { signal: AbortSignal.timeout(90000) });
     const data = await res.json();
     Object.assign(checkResults, data);
 
